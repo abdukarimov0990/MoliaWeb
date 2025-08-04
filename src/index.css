@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+.container{
+  @apply w-full max-w-7xl mx-auto px-5
+}
+@theme{
+  --color-mainBlue:#111A2F;
+  --color-mainRed:#7F0000;
+  --font-main: "Sora", "sans-serif";
+}
