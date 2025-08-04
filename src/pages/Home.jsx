@@ -178,11 +178,6 @@ const Home = () => {
                     </div>
 
                     <div className="mt-12">
-                        <img
-                            src="/images/about-illustration.png"
-                            alt="Molia FinTech Illustration"
-                            className="w-full max-w-xl mx-auto drop-shadow-xl rounded-xl"
-                        />
                     </div>
                 </div>
             </section>
