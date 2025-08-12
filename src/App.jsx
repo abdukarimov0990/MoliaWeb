@@ -4,8 +4,10 @@ import MainLayout from './layout/MainLayout'
 import Home from './pages/Home'
 import News from './pages/News'
 import About from './pages/Abous'
-import Game from './pages/Game'
+import Game from './pages/Products'
 import Contact from './pages/Contact'
+import ProductPage from './pages/Products'
+import ProductDetail from './pages/ProductDetail'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -13,10 +15,9 @@ const router = createBrowserRouter(
       <Route path="/" element={<Home />} />
       <Route path="/news" element={<News />} />
       <Route path="/about" element={<About />} />
-      <Route path="/game" element={<Game />} />
+      <Route path="/products" element={<ProductPage />} />
       <Route path="/contact" element={<Contact />} />
-
-
+      <Route path="/products/:id" element={<ProductDetail/>}/>
     </Route>
   )
 )

@@ -1,14 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Outlet } from 'react-router'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
 const MainLayout = () => {
+  const [cart, setCart] = useState([]);
+
   return (
     <div className='min-h-screen flex flex-col'>
-        <Header/>
-      <main className='grow'>
-        <Outlet/>
+        <Header cart={cart} />
+      <main className='grow mt-[140px]'>
+        <Outlet context={{ cart, setCart }}/>
       </main>
       <Footer/>
     </div>

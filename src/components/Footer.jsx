@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router'
 import logo from "../assets/img/logo.png"
 import { FaFacebookF, FaInstagram, FaTelegramPlane } from 'react-icons/fa'
+import {motion} from 'framer-motion'
 
 const Footer = () => {
   return (
@@ -10,12 +11,23 @@ const Footer = () => {
         
         {/* Logo & Tagline */}
         <div className="flex flex-col gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
-            <img src={logo} alt="Molia Logo" className="w-16 transition-transform group-hover:rotate-3" />
-            <h1 className="text-4xl font-semibold tracking-tight">
-              moli<span className="text-black">a</span>
-            </h1>
-          </Link>
+        <Link to="/" className="flex items-center gap-2 z-50 group">
+                <motion.img
+                  src={logo}
+                  alt="Molia Logo"
+                  className="w-16"
+                  whileHover={{
+                    rotate: [0, 10, -10, 5, -5, 0],
+                    scale: 1.1,
+                    transition: { duration: 0.8, ease: "easeInOut" }
+                  }}
+                  whileTap={{
+                    scale: 0.95,
+                    rotate: 0
+                  }}
+                />
+              </Link>
+
           <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
             Moliyaviy savodxonlik – bu zamonaviy hayotda mustahkam poydevor. Biz siz bilan birgamiz.
           </p>
@@ -23,12 +35,12 @@ const Footer = () => {
 
         {/* Navigatsiya */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-600">Navigatsiya</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-600">Tezkor linklar</h3>
           <ul className="flex flex-col gap-2 text-base font-light">
             <li><Link to="/" className="hover:text-black transition">Asosiy</Link></li>
-            <li><Link to="/about" className="hover:text-black transition">Haqimizda</Link></li>
+            <li><Link to="/about" className="hover:text-black transition">Loyiha haqida</Link></li>
             <li><Link to="/news" className="hover:text-black transition">Yangiliklar</Link></li>
-            <li><Link to="/game" className="hover:text-black transition">Stol o‘yini</Link></li>
+            <li><Link to="/game" className="hover:text-black transition">Mahsulotlar</Link></li>
           </ul>
         </div>
 

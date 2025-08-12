@@ -8,3 +8,48 @@
   --color-mainRed:#7F0000;
   --font-main: "Sora", "sans-serif";
 }
+/* Navigation tugmalar */
+.custom-swiper .swiper-button-next,
+.custom-swiper .swiper-button-prev {
+  color: #ff6600; /* tugma rangi */
+  width: 40px;
+  height: 40px;
+}
+
+.custom-swiper .swiper-button-next::after,
+.custom-swiper .swiper-button-prev::after {
+  font-size: 20px; /* icon kattaligi */
+}
+
+/* Pagination umumiy container'iga fon */
+.custom-swiper .swiper-pagination {
+  position: absolute !important; /* pastga joylash uchun absolute */
+  left: 50% !important; /* markazga o‘rnatish */
+  transform: translateX(-50%); /* aniq markaz */
+  width: auto !important; /* w-full bo‘lishini to‘xtatadi */
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  display: inline-flex;
+  gap: 6px; /* bulletlar orasidagi masofa */
+  z-index: 10;
+}
+
+
+/* Bullet'lar ichida */
+.custom-swiper .swiper-pagination-bullet {
+  background-color: #ccc;
+  width: 12px;
+  height: 12px;
+  opacity: 1;
+  
+}
+.custom-swiper .swiper-pagination {
+  margin: 0 auto; /* markazga olib keladi */
+}
+
+.custom-swiper .swiper-pagination-bullet-active {
+  width: 50px;
+  height: 16px;
+  border-radius: 10px;
+}

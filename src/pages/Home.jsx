@@ -1,270 +1,472 @@
-import React from 'react'
-import { Link } from 'react-router'
-import { FaArrowRight, FaWallet, FaSearchDollar, FaClock, FaRegStickyNote, FaTimesCircle, FaLightbulb, FaCheckCircle, FaPiggyBank, FaChartLine, FaCoins, } from 'react-icons/fa'
-import hero from '../assets/img/hero.png'
+import React, { useEffect } from 'react';
+import { Link } from 'react-router';
+import { FaArrowRight, FaWallet, FaSearchDollar, FaClock, FaRegStickyNote, FaTimesCircle, FaLightbulb, FaCheckCircle, FaPiggyBank, FaChartLine, FaCoins } from 'react-icons/fa';
+import hero from '../assets/img/hero.png';
 import oyin1 from '../assets/img/oyin1.jpg';
 import oyin2 from '../assets/img/oyin2.jpg';
 import oyin3 from '../assets/img/oyin3.jpg';
-import pattern from '../assets/img/pattern.svg'
-// Top of component
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, Pagination, Autoplay } from 'swiper/modules'
-import 'swiper/css'
-import 'swiper/css/navigation'
-import 'swiper/css/pagination'
+import pattern from '../assets/img/pattern.svg';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 import { RiBankLine } from 'react-icons/ri';
 import { MdAttachMoney } from 'react-icons/md';
-
-
-
+import { motion } from 'framer-motion';
+import Typed from 'typed.js';
 
 const tips = [
-    {
-        title: "Pullarim qayerga ketdi?",
-        text: "Kuyinmang, bu hammada bo‘ladi, lekin...",
-        icon: <FaWallet className="text-mainRed text-3xl" />
-    },
-    {
-        title: "Aslida",
-        text: "Pul o‘z-o‘zidan yo‘qolmaydi, siz yozmagansiz.",
-        icon: <FaSearchDollar className="text-mainBlue text-3xl" />
-    },
-    {
-        title: "Ha!",
-        text: "Yozsangiz kuzatasiz, kuzatsangiz nazorat qilasiz.",
-        icon: <FaRegStickyNote className="text-mainRed text-3xl" />
-    },
-    {
-        title: "Xa, bo‘ldi!",
-        text: "+/- larni yozish 5-10 daqiqa vaqt oladi xolos.",
-        icon: <FaClock className="text-mainBlue text-3xl" />
-    },
-    {
-        title: "Ko'p vaqt oladi!",
-        text: "Bajarib ko‘rmaganingiz uchun bu fikrdasiz.",
-        icon: <FaTimesCircle className="text-mainRed text-3xl" />
-    },
-    {
-        title: "Tavsiya",
-        text: "MoliaUz siz uchun tayyor dastur.",
-        icon: <FaLightbulb className="text-mainBlue text-3xl" />
-    },
-]
+  {
+    title: "Pullarim qayerga ketdi?",
+    text: "Kuyinmang, bu hammada bo'ladi, lekin...",
+    icon: <FaWallet className="text-mainRed text-3xl" />
+  },
+  {
+    title: "Aslida",
+    text: "Pul o'z-o'zidan yo'qolmaydi, siz yozmagansiz.",
+    icon: <FaSearchDollar className="text-mainBlue text-3xl" />
+  },
+  {
+    title: "Ha!",
+    text: "Yozsangiz kuzatasiz, kuzatsangiz nazorat qilasiz.",
+    icon: <FaRegStickyNote className="text-mainRed text-3xl" />
+  },
+  {
+    title: "Xa, bo'ldi!",
+    text: "+/- larni yozish 5-10 daqiqa vaqt oladi xolos.",
+    icon: <FaClock className="text-mainBlue text-3xl" />
+  },
+  {
+    title: "Ko'p vaqt oladi!",
+    text: "Bajarib ko'rmaganingiz uchun bu fikrdasiz.",
+    icon: <FaTimesCircle className="text-mainRed text-3xl" />
+  },
+  {
+    title: "Tavsiya",
+    text: "MoliaUz siz uchun tayyor dastur.",
+    icon: <FaLightbulb className="text-mainBlue text-3xl" />
+  },
+];
+
 const newsList = [
-    {
-        id: 1,
-        title: "Moliyani boshqarishdagi 3 ta keng tarqalgan xato",
-        category: "Maslahat",
-        desc: "Ko‘pchilik daromad oshgan sari xarajatni ham orttiradi — bu eng keng tarqalgan xatolardan biri.",
-        image: "/images/news-1.jpg",
-        link: "/blog/moliya-xatolar"
-    },
-    {
-        id: 2,
-        title: "Pul haqida bilishingiz kerak bo‘lgan 5 haqiqat",
-        category: "Foydali",
-        desc: "Pulni tejash emas, balki qanday ishlatishni bilish muhimroq. Biz buni tahlil qilamiz.",
-        image: "/images/news-2.jpg",
-        link: "/blog/pul-haqiqat"
-    },
-    {
-        id: 3,
-        title: "Moliya o‘yini orqali savodxonlikni oshiring",
-        category: "O‘yin",
-        desc: "Stol o‘yinlari orqali moliyaviy fikrlashni qanday rivojlantirish mumkin?",
-        image: "/images/news-3.jpg",
-        link: "/blog/moliya-oyin"
-    },
-]
+  {
+    id: 1,
+    title: "Moliyani boshqarishdagi 3 ta keng tarqalgan xato",
+    category: "Maslahat",
+    desc: "Ko'pchilik daromad oshgan sari xarajatni ham orttiradi - bu eng keng tarqalgan xatolardan biri.",
+    image: "/images/news-1.jpg",
+    link: "/blog/moliya-xatolar"
+  },
+  {
+    id: 2,
+    title: "Pul haqida bilishingiz kerak bo'lgan 5 haqiqat",
+    category: "Foydali",
+    desc: "Pulni tejash emas, balki qanday ishlatishni bilish muhimroq. Biz buni tahlil qilamiz.",
+    image: "/images/news-2.jpg",
+    link: "/blog/pul-haqiqat"
+  },
+  {
+    id: 3,
+    title: "Moliya o'yini orqali savodxonlikni oshiring",
+    category: "O'yin",
+    desc: "Stol o'yinlari orqali moliyaviy fikrlashni qanday rivojlantirish mumkin?",
+    image: "/images/news-3.jpg",
+    link: "/blog/moliya-oyin"
+  },
+];
 
 const Home = () => {
-    return (
-        <div className="bg-white font-main">
+  useEffect(() => {
+    // Typing animatsiyasi uchun
+    const typed = new Typed('.typing-animation', {
+      strings: ['aqlli', 'innovatsion', 'samarali', 'zamonaviy'],
+      typeSpeed: 100,
+      backSpeed: 60,
+      loop: true,
+      showCursor: true,
+      cursorChar: '|',
+    });
 
-            {/* HERO SECTION */}
-            <section className="py-24">
+    return () => {
+      typed.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="bg-white  rounded-2xl font-main overflow-x-hidden">
+      {/* HERO SECTION */}
+      <section className="py-24">
         <div className="container mx-auto px-4 grid md:grid-cols-2 items-center gap-16">
           {/* Text */}
-          <div className="text-center md:text-left space-y-6">
+          <motion.div
+            className="text-center md:text-left space-y-6"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          >
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-snug">
-              Moliyaviy barqarorlik <br className='hidden lg:block' /> uchun <span className="text-mainBlue">aqlli</span>{' '}
-              <span className="text-mainRed">yechimlar</span>
+              Moliyaviy barqarorlik <br className='hidden lg:block' /> uchun{' '}
+              <span className="text-mainBlue typing-animation"></span>{' '}
+              <motion.span
+                className="text-mainRed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 1 }}
+              >
+                yechimlar
+              </motion.span>
             </h1>
-            <p className="text-gray-500 text-base">
-              <span className="text-mainRed font-medium">MoliaUz</span> sizga byudjet nazorati, stol o‘yinlari orqali
+            <motion.p
+              className="text-gray-500 text-base"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 1 }}
+            >
+              <span className="text-mainRed font-medium">MoliaUz</span> sizga byudjet nazorati, stol o'yinlari orqali
               <span className="text-mainBlue"> moliya savodxonligi</span> va innovatsion vositalarni taklif etadi.
-            </p>
-            <div className="flex flex-wrap justify-center md:justify-start gap-4">
+            </motion.p>
+            <motion.div
+              className="flex flex-wrap justify-center md:justify-start gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+            >
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 bg-mainBlue text-white px-6 py-3 rounded-full text-sm md:text-base shadow-md hover:shadow-lg hover:bg-blue-800 transition"
+                className="inline-flex items-center gap-2 bg-mainBlue text-white px-6 py-3 rounded-full text-sm md:text-base shadow-md hover:shadow-lg hover:bg-blue-800 transition-all duration-300 hover:-translate-y-1"
               >
-                Bog‘lanish <FaArrowRight size={16} />
+                Bog'lanish <FaArrowRight size={16} />
               </Link>
               <Link
                 to="/game"
-                className="inline-flex items-center gap-2 border border-mainRed text-mainRed px-6 py-3 rounded-full text-sm md:text-base hover:bg-mainRed hover:text-white transition"
+                className="inline-flex items-center gap-2 border border-mainRed text-mainRed px-6 py-3 rounded-full text-sm md:text-base hover:bg-mainRed hover:text-white transition-all duration-300 hover:-translate-y-1"
               >
-                Stol o‘yini
+                Stol o'yini
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Image */}
-          <div>
-            <img src={hero} alt="MoliaUz Hero" className="w-full hidden lg:block max-w-md mx-auto" />
-          </div>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <img
+              src={hero}
+              alt="MoliaUz Hero"
+              className="w-full hidden lg:block max-w-md mx-auto transition-transform duration-500 hover:rotate-1 hover:scale-105"
+            />
+          </motion.div>
         </div>
       </section>
 
       {/* TIPS SECTION */}
       <section className="py-20 bg-gray-50 relative overflow-hidden">
         <div className="container mx-auto px-4">
-          {/* Pattern */}
-          <img src={pattern} alt="" className="w-32 absolute right-20 rotate-45 top-0" />
+          {/* Floating elements */}
+          <motion.img
+            src={pattern}
+            alt=""
+            className="w-32 absolute right-20 rotate-45 top-0 opacity-70"
+            animate={{ y: [0, 15, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
 
-          {/* Decorative Icons */}
-          <FaPiggyBank className="text-mainBlue text-6xl absolute top-10 left-10 rotate-12" />
-          <FaChartLine className="text-mainBlue text-7xl absolute bottom-16 right-10 -rotate-45" />
-          <RiBankLine className="text-mainRed text-5xl absolute top-1/2 left-4 -translate-y-1/2 -rotate-6" />
-          <MdAttachMoney className="text-mainBlue text-8xl absolute bottom-10 left-1/3 rotate-45" />
-          <FaCoins className="text-mainRed text-6xl absolute top-10 right-1/4 -rotate-12" />
+          <motion.div
+            className="text-mainBlue text-6xl absolute top-10 left-10 rotate-12 opacity-20"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
+          >
+            <FaPiggyBank />
+          </motion.div>
+
+          <motion.div
+            className="text-mainBlue text-7xl absolute bottom-16 right-10 -rotate-45 opacity-20"
+            animate={{ y: [0, 15, 0] }}
+            transition={{ duration: 5, repeat: Infinity, delay: 0.3 }}
+          >
+            <FaChartLine />
+          </motion.div>
+
+          <motion.div
+            className="text-mainRed text-5xl absolute top-1/2 left-4 -translate-y-1/2 -rotate-6 opacity-20"
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 4, repeat: Infinity, delay: 0.7 }}
+          >
+            <RiBankLine />
+          </motion.div>
+
+          <motion.div
+            className="text-mainBlue text-8xl absolute bottom-10 left-1/3 rotate-45 opacity-20"
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 6, repeat: Infinity, delay: 0.2 }}
+          >
+            <MdAttachMoney />
+          </motion.div>
+
+          <motion.div
+            className="text-mainRed text-6xl absolute top-10 right-1/4 -rotate-12 opacity-20"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 4, repeat: Infinity, delay: 0.4 }}
+          >
+            <FaCoins />
+          </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
             {tips.map((tip, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="bg-white/5 backdrop-blur-md flex flex-col items-center p-6 rounded-2xl shadow-lg hover:translate-y-[-10px] transition group"
+                className="relative flex flex-col items-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 group"
+                style={{
+                  backdropFilter: 'blur(8px)',
+                  backgroundColor: '',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                }}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <div className="mb-4 scale-150 group-hover:scale-[1.7] transition-transform">
+                {/* Stroke effect */}
+                <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 pointer-events-none" />
+
+                <div className="mb-4 scale-150 group-hover:scale-[1.7] transition-transform duration-500">
                   {tip.icon}
                 </div>
-                <h3 className="text-2xl text-center font-semibold text-mainBlue mb-2">
+                <h3 className="text-2xl text-center font-semibold text-mainBlue mb-2 group-hover:text-mainRed transition-colors duration-300">
                   {tip.title}
                 </h3>
-                <p className="text-base text-center text-gray-600">{tip.text}</p>
-              </div>
+                <p className="text-base text-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                  {tip.text}
+                </p>
+              </motion.div>))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES SECTION */}
+      <section className="bg-gradient-to-br from-white to-gray-50 py-24 font-main">
+        <div className="container mx-auto px-4 max-w-5xl text-center">
+          <motion.h2
+            className="text-4xl md:text-5xl font-bold text-gray-900 mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            Moliyani <span className="text-mainRed">tushunish</span> — bu{' '}
+            <TypingText text="hotirjam yashash san'ati" />
+          </motion.h2>
+
+          <motion.p
+            className="text-gray-600 text-lg md:text-xl leading-relaxed mb-12"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <strong className="text-mainBlue">Molia</strong> — bu zamonaviy FinTech startap.
+            Biz foydalanuvchilarga moliyaviy savodxonlikni oshirish, daromad/xarajatni kuzatish va ongli boshqarish vositalarini taqdim etamiz.
+          </motion.p>
+
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: <FaLightbulb className="text-mainBlue text-4xl mb-4 mx-auto" />,
+                title: "Innovatsion yondashuv",
+                text: "Foydalanuvchilar uchun qulay va zamonaviy texnologiyalarga asoslangan echimlar."
+              },
+              {
+                icon: <FaCheckCircle className="text-mainRed text-4xl mb-4 mx-auto" />,
+                title: "Savodxonlik usullari",
+                text: "Stol o'yinlari, maslahatlar va kundalik mashqlar orqali moliyaviy madaniyatni oshiring."
+              },
+              {
+                icon: <FaWallet className="text-mainBlue text-4xl mb-4 mx-auto" />,
+                title: "Byudjet nazorati",
+                text: "Xarajat va daromadlar ustidan to'liq nazorat uchun sizga mos interfeys."
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+              >
+                <motion.div
+                  className="group-hover:scale-110 transition-transform duration-500"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  {feature.icon}
+                </motion.div>
+                <h4 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-mainBlue transition-colors duration-300">
+                  {feature.title}
+                </h4>
+                <p className="text-gray-500 text-sm group-hover:text-gray-700 transition-colors duration-300">
+                  {feature.text}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
-            <section className="bg-gradient-to-br from-white to-gray-50 py-24 font-main">
-                <div className="container mx-auto px-4 max-w-5xl text-center">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-                        Moliyani <span className="text-mainRed">tushunish</span> — bu <span className="text-mainBlue">hotirjam yashash</span> san’ati
-                    </h2>
 
-                    <p className="text-gray-600 text-lg md:text-xl leading-relaxed mb-12">
-                        <strong className="text-mainBlue">Molia</strong> — bu zamonaviy FinTech startap.
-                        Biz foydalanuvchilarga moliyaviy savodxonlikni oshirish, daromad/xarajatni kuzatish va ongli boshqarish vositalarini taqdim etamiz.
-                    </p>
+      {/* NEWS SECTION */}
+      <section className="py-24 bg-white font-main">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <motion.div
+            className="text-center mb-14"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+              So'nggi <TypingText text="yangiliklar" /> va <span className="text-mainRed">postlar</span>
+            </h2>
+            <p className="text-gray-500 mt-4 max-w-xl mx-auto text-lg">
+              Moliyaviy savodxonlik, innovatsiyalar va kundalik maslahatlar bilan tanishing.
+            </p>
+          </motion.div>
 
-                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        <div className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition group">
-                            <FaLightbulb className="text-mainBlue text-4xl mb-4 mx-auto group-hover:scale-110 transition" />
-                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Innovatsion yondashuv</h4>
-                            <p className="text-gray-500 text-sm">Foydalanuvchilar uchun qulay va zamonaviy texnologiyalarga asoslangan echimlar.</p>
-                        </div>
-                        <div className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition group">
-                            <FaCheckCircle className="text-mainRed text-4xl mb-4 mx-auto group-hover:scale-110 transition" />
-                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Savodxonlik usullari</h4>
-                            <p className="text-gray-500 text-sm">Stol o‘yinlari, maslahatlar va kundalik mashqlar orqali moliyaviy madaniyatni oshiring.</p>
-                        </div>
-                        <div className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition group">
-                            <FaWallet className="text-mainBlue text-4xl mb-4 mx-auto group-hover:scale-110 transition" />
-                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Byudjet nazorati</h4>
-                            <p className="text-gray-500 text-sm">Xarajat va daromadlar ustidan to‘liq nazorat uchun sizga mos interfeys.</p>
-                        </div>
-                    </div>
-
-                    <div className="mt-12">
-                    </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {newsList.map((news, index) => (
+              <motion.div
+                key={news.id}
+                className="group bg-gray-50 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-3"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.15 }}
+              >
+                <div className="overflow-hidden">
+                  <motion.img
+                    src={news.image}
+                    alt={news.title}
+                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                    whileHover={{ scale: 1.1 }}
+                  />
                 </div>
-            </section>
-            <section className="py-24 bg-white font-main">
-                <div className="container mx-auto px-4 max-w-6xl">
-                    <div className="text-center mb-14">
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-                            So‘nggi <span className="text-mainBlue">yangiliklar</span> va <span className="text-mainRed">postlar</span>
-                        </h2>
-                        <p className="text-gray-500 mt-4 max-w-xl mx-auto text-lg">
-                            Moliyaviy savodxonlik, innovatsiyalar va kundalik maslahatlar bilan tanishing.
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-                        {newsList.map((news) => (
-                            <div
-                                key={news.id}
-                                className="group  bg-gray-50 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 hover:-translate-y-2 hover:scale-[1.02]"
-                            >
-                                <img
-                                    src={news.image}
-                                    alt={news.title}
-                                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                                <div className="p-6 space-y-3">
-                                    <span className="inline-block text-sm text-mainRed font-medium uppercase tracking-wider">
-                                        {news.category}
-                                    </span>
-                                    <h3 className="text-xl font-semibold text-gray-800 group-hover:text-mainBlue transition-colors">
-                                        {news.title}
-                                    </h3>
-                                    <p className="text-gray-600 text-sm">{news.desc}</p>
-                                    <Link
-                                        to={news.link}
-                                        className="inline-flex items-center gap-1 text-mainBlue font-medium hover:underline transition"
-                                    >
-                                        Batafsil o‘qish <FaArrowRight className="text-sm" />
-                                    </Link>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex items-center justify-center pt-10">
-                        <Link to="/news" ><button className='py-3 px-6 rounded-4xl bg-white text-mainBlue border border-mainBlue hover:bg-mainBlue hover:text-white ease-in-out transition-all'>Ko'proq ko'rish</button></Link>
-                    </div>
+                <div className="p-6 space-y-3">
+                  <span className="inline-block text-sm text-mainRed font-medium uppercase tracking-wider">
+                    {news.category}
+                  </span>
+                  <h3 className="text-xl font-semibold text-gray-800 group-hover:text-mainBlue transition-colors duration-300">
+                    {news.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm">{news.desc}</p>
+                  <Link
+                    to={news.link}
+                    className="inline-flex items-center gap-1 text-mainBlue font-medium hover:underline transition group-hover:text-mainRed duration-300"
+                  >
+                    Batafsil o'qish <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />
+                  </Link>
                 </div>
-            </section>
-            <section className="bg-gray-50 py-24">
-                <div className="container mx-auto px-4 max-w-6xl">
-
-                    {/* Matn */}
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-                            Moliyani o‘yin <span className="text-mainRed">bilan o‘rganing</span>
-                        </h2>
-                        <p className="text-gray-600 text-lg mt-4 max-w-2xl mx-auto">
-                            MoliaUz’ning maxsus stol o‘yini orqali moliyani o‘rganish endi qiziqarli va interaktiv.
-                        </p>
-                    </div>
-
-                    {/* Rasm Kompozitsiyasi */}
-                    <Swiper
-                        modules={[Navigation, Pagination, Autoplay]}
-                        spaceBetween={30}
-                        slidesPerView={1.2}
-                        navigation
-                        pagination={{ clickable: true }}
-                        autoplay={{ delay: 4000, disableOnInteraction: false }}
-                        loop={true}
-                        className="rounded-2xl shadow-lg"
-                    >
-                        {[oyin1, oyin2, oyin3].map((img, idx) => (
-                            <SwiperSlide key={idx}>
-                                <img
-                                    src={img}
-                                    alt={`O‘yin rasmi ${idx + 1}`}
-                                    className="rounded-xl w-full h-[500px] object-cover hover:scale-[1.03] transition duration-300 shadow-md"
-                                />
-                            </SwiperSlide>
-                        ))}
-                    </Swiper>
-                </div>
-            </section>
-                        
+              </motion.div>
+            ))}
+          </div>
+          <motion.div
+            className="flex items-center justify-center pt-10"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          >
+            <Link to="/news">
+              <motion.button
+                className="py-3 px-6 rounded-full bg-white text-mainBlue border border-mainBlue hover:bg-mainBlue hover:text-white transition-all duration-300"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Ko'proq ko'rish
+              </motion.button>
+            </Link>
+          </motion.div>
         </div>
-    )
-}
+      </section>
 
-export default Home
+      {/* SWIPER SECTION */}
+      <section className="bg-gray-50 py-24">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+              Moliyani <TypingText text="o'yin bilan o'rganing" />
+            </h2>
+            <p className="text-gray-600 text-lg mt-4 max-w-2xl mx-auto">
+              MoliaUz'ning maxsus stol o'yini orqali moliyani o'rganish endi qiziqarli va interaktiv.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              spaceBetween={30}
+              slidesPerView={1.2}
+              navigation
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 4000, disableOnInteraction: false }}
+              loop={true}
+              className="rounded-2xl shadow-lg"
+            >
+              {[oyin1, oyin2, oyin3].map((img, idx) => (
+                <SwiperSlide key={idx}>
+                  <motion.div
+                    className="overflow-hidden rounded-xl"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <img
+                      src={img}
+                      alt={`O'yin rasmi ${idx + 1}`}
+                      className="w-full h-[500px] object-cover shadow-md"
+                    />
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// Typing animatsiyasi uchun komponent
+const TypingText = ({ text }) => {
+  return (
+    <motion.span
+      className="text-mainBlue"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {text.split('').map((char, index) => (
+        <motion.span
+          key={index}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.1, delay: index * 0.05 }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
+
+export default Home;
