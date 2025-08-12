@@ -134,13 +134,13 @@ const Home = () => {
             >
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 bg-mainBlue text-white px-6 py-3 rounded-full text-sm md:text-base shadow-md hover:shadow-lg hover:bg-blue-800 transition-all duration-300 hover:-translate-y-1"
+                className="inline-flex items-center gap-2 bg-mainBlue text-white px-6 py-3 rounded-full text-sm md:text-base shadow-md hover:shadow-lg hover:bg-mainRed transition-all duration-300 hover:-translate-y-1"
               >
                 Bog'lanish <FaArrowRight size={16} />
               </Link>
               <Link
-                to="/game"
-                className="inline-flex items-center gap-2 border border-mainRed text-mainRed px-6 py-3 rounded-full text-sm md:text-base hover:bg-mainRed hover:text-white transition-all duration-300 hover:-translate-y-1"
+                to="/products"
+                className="inline-flex items-center gap-2 border border-mainRed text-mainRed px-6 py-3 rounded-full text-sm md:text-base hover:bg-mainBlue hover:text-white transition-all duration-300 hover:-translate-y-1"
               >
                 Stol o'yini
               </Link>
