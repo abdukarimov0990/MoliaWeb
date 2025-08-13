@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router'
 import logo from '../assets/img/result.png'
-import { FaFacebookF, FaInstagram, FaTelegramPlane } from 'react-icons/fa'
+import { FaFacebookF, FaInstagram, FaTelegramPlane, FaYoutube } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 
 const Footer = () => {
@@ -65,7 +65,7 @@ const Footer = () => {
           <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-600 dark:text-gray-400">Biz bilan</h3>
           <div className="flex gap-4 text-xl text-gray-500 dark:text-gray-400">
             <a href="#" className="hover:text-black dark:hover:text-white transition-colors duration-300">
-              <FaFacebookF />
+              <FaYoutube />
             </a>
             <a href="#" className="hover:text-black dark:hover:text-white transition-colors duration-300">
               <FaInstagram />

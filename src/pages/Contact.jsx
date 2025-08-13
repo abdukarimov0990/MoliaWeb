@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BsInstagram, BsTelegram } from 'react-icons/bs';
-import { FaFacebook, FaGithub, FaTwitter } from 'react-icons/fa';
+import { FaFacebook, FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
@@ -118,9 +118,9 @@ const Contact = () => {
               whileHover={{ scale: 1.05 }}
             >
               <div className="flex justify-center mb-3">
-                <FaFacebook size={48} className="text-mainBlue dark:text-mainBlueLight group-hover:text-mainRed dark:group-hover:text-mainRedLight transition-colors duration-300" />
+                <FaYoutube size={48} className="text-mainBlue dark:text-mainBlueLight group-hover:text-mainRed dark:group-hover:text-mainRedLight transition-colors duration-300" />
               </div>
-              <h3 className="text-center text-lg font-semibold text-mainRed dark:text-mainRedLight">Facebook</h3>
+              <h3 className="text-center text-lg font-semibold text-mainRed dark:text-mainRedLight">Youtube</h3>
             </motion.a>
           </div>
         </motion.div>
