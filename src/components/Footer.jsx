@@ -62,7 +62,7 @@ const Footer = () => {
 
         {/* Social / Subscribe */}
         <div className="flex flex-col gap-4 w-full max-w-sm">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-600 dark:text-gray-400">Biz bilan</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-600 dark:text-gray-400">Bizni kuzatib boring</h3>
           <div className="flex gap-4 text-xl text-gray-500 dark:text-gray-400">
             <a href="#" className="hover:text-black dark:hover:text-white transition-colors duration-300">
               <FaYoutube />
