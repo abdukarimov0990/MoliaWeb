@@ -5,7 +5,9 @@ import hero from '../assets/img/hero.png';
 import oyin1 from '../assets/img/oyin1.jpg';
 import oyin2 from '../assets/img/oyin2.jpg';
 import oyin3 from '../assets/img/oyin3.jpg';
-import pattern from '../assets/img/pattern.svg';
+import patternRight from '../assets/img/rightPattern.png';
+import patternLeft from '../assets/img/leftPattern.png';
+
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -167,9 +169,16 @@ const Home = () => {
         <div className="container mx-auto px-4">
           {/* Floating elements */}
           <motion.img
-            src={pattern}
+            src={patternRight}
             alt=""
-            className="w-32 absolute right-20 rotate-45 top-0 opacity-70 dark:opacity-30"
+            className="w-32 absolute right-20 rotate-90 top-0  dark:opacity-30"
+            animate={{ y: [0, 15, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+            <motion.img
+            src={patternLeft}
+            alt=""
+            className="w-32 absolute left-20 rotate-90 bottom-0  dark:opacity-30"
             animate={{ y: [0, 15, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
