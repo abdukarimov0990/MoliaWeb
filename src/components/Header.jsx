@@ -116,7 +116,7 @@ const Header = () => {
                 </span>
                 <span className="whitespace-nowrap flex items-center">
                   <FaCoins className='hidden lg:block'></FaCoins>
-                  <span className="hidden lg:block">1g TILLA = </span>
+                  <span className="hidden lg:block">1g OLTIN = </span>
                   <span>{rates.gold ? Math.round(rates.gold).toLocaleString() : "..."} so'm</span>
                 </span>
               </div>
