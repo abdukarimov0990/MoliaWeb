@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router';
-import { FaPhoneAlt, FaBars, FaTimes, FaMoon, FaSun } from 'react-icons/fa';
+import { FaPhoneAlt, FaBars, FaTimes, FaMoon, FaSun, FaDollarSign, FaEuroSign, FaCoins } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/img/result.png';
 
@@ -104,16 +104,19 @@ const Header = () => {
             {/* Currency rates with responsive layout */}
             <div className="flex-1 min-w-0">
               <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-1 scrollbar-hide">
-                <span className="whitespace-nowrap flex-shrink-0">
-                  <span className="hidden xs:inline">1 USD = </span>
+                <span className="whitespace-nowrap flex items-center">
+                  <FaDollarSign className='hidden lg:block'></FaDollarSign>
+                  <span className="hidden lg:block">1 USD = </span>
                   <span>{rates.usd ? rates.usd.toFixed(2) : "..."} so'm</span>
                 </span>
-                <span className="whitespace-nowrap flex-shrink-0">
-                  <span className="hidden xs:inline">1 EUR = </span>
+                <span className="whitespace-nowrap flex items-center">
+                <FaEuroSign className='hidden lg:block'></FaEuroSign>
+                  <span className="hidden lg:block">1 EUR = </span>
                   <span>{rates.eur ? rates.eur.toFixed(2) : "..."} so'm</span>
                 </span>
-                <span className="whitespace-nowrap flex-shrink-0">
-                  <span className="hidden xs:inline">1g TILLA = </span>
+                <span className="whitespace-nowrap flex items-center">
+                  <FaCoins className='hidden lg:block'></FaCoins>
+                  <span className="hidden lg:block">1g TILLA = </span>
                   <span>{rates.gold ? Math.round(rates.gold).toLocaleString() : "..."} so'm</span>
                 </span>
               </div>
