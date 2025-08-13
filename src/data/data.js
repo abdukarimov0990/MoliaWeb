@@ -22,13 +22,6 @@ export const products = [
       description: "Pullar so'vgalar kartochkalarni solish uchun konvert",
       rating: 5.0,
       image: "/images/product-pro.jpg",
-    },  {
-      id: 3,
-      name: "Bloknot",
-      price: 149.99,
-      description: "Qulay premium sifatdagi sifatli qogozli qulfli bloknot",
-      rating: 5.0,
-      image: "/images/product-pro.jpg",
     },
   ];
   
