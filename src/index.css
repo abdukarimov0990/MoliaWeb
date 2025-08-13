@@ -6,6 +6,9 @@
 @theme{
   --color-mainBlue:#111A2F;
   --color-mainRed:#7F0000;
+  --color-mainBlueLight: #4A5D85;
+  --color-mainRedLight:  #D12C2C;
+
   --font-main: "Sora", "sans-serif";
 }
 /* Navigation tugmalar */
@@ -20,6 +23,8 @@
 .custom-swiper .swiper-button-prev::after {
   font-size: 20px; /* icon kattaligi */
 }
+@custom-variant dark (&:where(.dark, .dark *));
+/* container  */
 
 /* Pagination umumiy container'iga fon */
 .custom-swiper .swiper-pagination {

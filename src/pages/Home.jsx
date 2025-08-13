@@ -20,32 +20,32 @@ const tips = [
   {
     title: "Pullarim qayerga ketdi?",
     text: "Kuyinmang, bu hammada bo'ladi, lekin...",
-    icon: <FaWallet className="text-mainRed text-3xl" />
+    icon: <FaWallet className="text-mainRed dark:text-mainRedLight text-3xl" />
   },
   {
     title: "Aslida",
     text: "Pul o'z-o'zidan yo'qolmaydi, siz yozmagansiz.",
-    icon: <FaSearchDollar className="text-mainBlue text-3xl" />
+    icon: <FaSearchDollar className="text-mainBlue dark:text-mainBlueLight text-3xl" />
   },
   {
     title: "Ha!",
     text: "Yozsangiz kuzatasiz, kuzatsangiz nazorat qilasiz.",
-    icon: <FaRegStickyNote className="text-mainRed text-3xl" />
+    icon: <FaRegStickyNote className="text-mainRed dark:text-mainRedLight text-3xl" />
   },
   {
     title: "Xa, bo'ldi!",
     text: "+/- larni yozish 5-10 daqiqa vaqt oladi xolos.",
-    icon: <FaClock className="text-mainBlue text-3xl" />
+    icon: <FaClock className="text-mainBlue dark:text-mainBlueLight text-3xl" />
   },
   {
     title: "Ko'p vaqt oladi!",
     text: "Bajarib ko'rmaganingiz uchun bu fikrdasiz.",
-    icon: <FaTimesCircle className="text-mainRed text-3xl" />
+    icon: <FaTimesCircle className="text-mainRed dark:text-mainRedLight text-3xl" />
   },
   {
     title: "Tavsiya",
     text: "MoliaUz siz uchun tayyor dastur.",
-    icon: <FaLightbulb className="text-mainBlue text-3xl" />
+    icon: <FaLightbulb className="text-mainBlue dark:text-mainBlueLight text-3xl" />
   },
 ];
 
@@ -94,9 +94,9 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-white  rounded-2xl font-main overflow-x-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl font-main overflow-x-hidden transition-colors duration-300">
       {/* HERO SECTION */}
-      <section className="py-24">
+      <section className="py-24 dark:bg-gray-900/50">
         <div className="container mx-auto px-4 grid md:grid-cols-2 items-center gap-16">
           {/* Text */}
           <motion.div
@@ -105,11 +105,11 @@ const Home = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-snug">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
               Moliyaviy barqarorlik <br className='hidden lg:block' /> uchun{' '}
-              <span className="text-mainBlue typing-animation"></span>{' '}
+              <span className="text-mainBlue dark:text-mainBlueLight typing-animation"></span>{' '} <br />
               <motion.span
-                className="text-mainRed"
+                className="text-mainRed dark:text-mainRedLight"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.5, duration: 1 }}
@@ -118,13 +118,13 @@ const Home = () => {
               </motion.span>
             </h1>
             <motion.p
-              className="text-gray-500 text-base"
+              className="text-gray-500 dark:text-gray-400 text-base"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 1 }}
             >
-              <span className="text-mainRed font-medium">MoliaUz</span> sizga byudjet nazorati, stol o'yinlari orqali
-              <span className="text-mainBlue"> moliya savodxonligi</span> va innovatsion vositalarni taklif etadi.
+              <span className="text-mainRed dark:text-mainRedLight font-medium">MoliaUz</span> sizga byudjet nazorati, stol o'yinlari orqali
+              <span className="text-mainBlue dark:text-mainBlueLight"> moliya savodxonligi</span> va innovatsion vositalarni taklif etadi.
             </motion.p>
             <motion.div
               className="flex flex-wrap justify-center md:justify-start gap-4"
@@ -134,15 +134,15 @@ const Home = () => {
             >
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 bg-mainBlue text-white px-6 py-3 rounded-full text-sm md:text-base shadow-md hover:shadow-lg hover:bg-mainRed transition-all duration-300 hover:-translate-y-1"
+                className="inline-flex items-center gap-2 bg-mainBlue dark:bg-mainBlueLight text-white px-6 py-3 rounded-full text-sm md:text-base shadow-md hover:shadow-lg hover:bg-mainRed dark:hover:bg-mainRedLight transition-all duration-300 hover:-translate-y-1"
               >
-                Bog'lanish <FaArrowRight size={16} />
+                Postlar <FaArrowRight size={16} />
               </Link>
               <Link
                 to="/products"
-                className="inline-flex items-center gap-2 border border-mainRed text-mainRed px-6 py-3 rounded-full text-sm md:text-base hover:bg-mainBlue hover:text-white transition-all duration-300 hover:-translate-y-1"
+                className="inline-flex items-center gap-2 border border-mainRed dark:border-mainRedLight text-mainRed dark:text-mainRedLight px-6 py-3 rounded-full text-sm md:text-base hover:bg-mainBlue dark:hover:bg-mainBlueLight hover:text-white transition-all duration-300 hover:-translate-y-1"
               >
-                Stol o'yini
+                Mahsulotlar
               </Link>
             </motion.div>
           </motion.div>
@@ -163,19 +163,19 @@ const Home = () => {
       </section>
 
       {/* TIPS SECTION */}
-      <section className="py-20 bg-gray-50 relative overflow-hidden">
+      <section className="py-20 bg-gray-50 dark:bg-gray-800 relative overflow-hidden transition-colors duration-300">
         <div className="container mx-auto px-4">
           {/* Floating elements */}
           <motion.img
             src={pattern}
             alt=""
-            className="w-32 absolute right-20 rotate-45 top-0 opacity-70"
+            className="w-32 absolute right-20 rotate-45 top-0 opacity-70 dark:opacity-30"
             animate={{ y: [0, 15, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
 
           <motion.div
-            className="text-mainBlue text-6xl absolute top-10 left-10 rotate-12 opacity-20"
+            className="text-mainBlue dark:text-mainBlueLight text-6xl absolute top-10 left-10 rotate-12 opacity-20 dark:opacity-10"
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
           >
@@ -183,7 +183,7 @@ const Home = () => {
           </motion.div>
 
           <motion.div
-            className="text-mainBlue text-7xl absolute bottom-16 right-10 -rotate-45 opacity-20"
+            className="text-mainBlue dark:text-mainBlueLight text-7xl absolute bottom-16 right-10 -rotate-45 opacity-20 dark:opacity-10"
             animate={{ y: [0, 15, 0] }}
             transition={{ duration: 5, repeat: Infinity, delay: 0.3 }}
           >
@@ -191,7 +191,7 @@ const Home = () => {
           </motion.div>
 
           <motion.div
-            className="text-mainRed text-5xl absolute top-1/2 left-4 -translate-y-1/2 -rotate-6 opacity-20"
+            className="text-mainRed dark:text-mainRedLight text-5xl absolute top-1/2 left-4 -translate-y-1/2 -rotate-6 opacity-20 dark:opacity-10"
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 4, repeat: Infinity, delay: 0.7 }}
           >
@@ -199,7 +199,7 @@ const Home = () => {
           </motion.div>
 
           <motion.div
-            className="text-mainBlue text-8xl absolute bottom-10 left-1/3 rotate-45 opacity-20"
+            className="text-mainBlue dark:text-mainBlueLight text-8xl absolute bottom-10 left-1/3 rotate-45 opacity-20 dark:opacity-10"
             animate={{ y: [0, 12, 0] }}
             transition={{ duration: 6, repeat: Infinity, delay: 0.2 }}
           >
@@ -207,7 +207,7 @@ const Home = () => {
           </motion.div>
 
           <motion.div
-            className="text-mainRed text-6xl absolute top-10 right-1/4 -rotate-12 opacity-20"
+            className="text-mainRed dark:text-mainRedLight text-6xl absolute top-10 right-1/4 -rotate-12 opacity-20 dark:opacity-10"
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 4, repeat: Infinity, delay: 0.4 }}
           >
@@ -218,10 +218,9 @@ const Home = () => {
             {tips.map((tip, index) => (
               <motion.div
                 key={index}
-                className="relative flex flex-col items-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 group"
+                className="relative flex flex-col items-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 group bg-white dark:bg-gray-700"
                 style={{
                   backdropFilter: 'blur(8px)',
-                  backgroundColor: '',
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
                 }}
                 initial={{ opacity: 0, y: 50 }}
@@ -235,63 +234,64 @@ const Home = () => {
                 <div className="mb-4 scale-150 group-hover:scale-[1.7] transition-transform duration-500">
                   {tip.icon}
                 </div>
-                <h3 className="text-2xl text-center font-semibold text-mainBlue mb-2 group-hover:text-mainRed transition-colors duration-300">
+                <h3 className="text-2xl text-center font-semibold text-mainBlue dark:text-mainBlueLight group-hover:text-mainRed dark:group-hover:text-mainRedLight transition-colors duration-300">
                   {tip.title}
                 </h3>
-                <p className="text-base text-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                <p className="text-base text-center text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-100 transition-colors duration-300">
                   {tip.text}
                 </p>
-              </motion.div>))}
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* FEATURES SECTION */}
-      <section className="bg-gradient-to-br from-white to-gray-50 py-24 font-main">
+      <section className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 py-24 font-main transition-colors duration-300">
         <div className="container mx-auto px-4 max-w-5xl text-center">
           <motion.h2
-            className="text-4xl md:text-5xl font-bold text-gray-900 mb-8"
+            className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-8"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            Moliyani <span className="text-mainRed">tushunish</span> — bu{' '}
+            Moliyani <span className="text-mainRed dark:text-mainRedLight">tushunish</span> — bu{' '}
             <TypingText text="hotirjam yashash san'ati" />
           </motion.h2>
 
           <motion.p
-            className="text-gray-600 text-lg md:text-xl leading-relaxed mb-12"
+            className="text-gray-600 dark:text-gray-400 text-lg md:text-xl leading-relaxed mb-12"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            <strong className="text-mainBlue">Molia</strong> — bu zamonaviy FinTech startap.
+            <strong className="text-mainBlue dark:text-mainBlueLight">Molia</strong> — bu zamonaviy FinTech startap.
             Biz foydalanuvchilarga moliyaviy savodxonlikni oshirish, daromad/xarajatni kuzatish va ongli boshqarish vositalarini taqdim etamiz.
           </motion.p>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
             {[
               {
-                icon: <FaLightbulb className="text-mainBlue text-4xl mb-4 mx-auto" />,
+                icon: <FaLightbulb className="text-mainBlue dark:text-mainBlueLight text-4xl mb-4 mx-auto" />,
                 title: "Innovatsion yondashuv",
                 text: "Foydalanuvchilar uchun qulay va zamonaviy texnologiyalarga asoslangan echimlar."
               },
               {
-                icon: <FaCheckCircle className="text-mainRed text-4xl mb-4 mx-auto" />,
+                icon: <FaCheckCircle className="text-mainRed dark:text-mainRedLight text-4xl mb-4 mx-auto" />,
                 title: "Savodxonlik usullari",
                 text: "Stol o'yinlari, maslahatlar va kundalik mashqlar orqali moliyaviy madaniyatni oshiring."
               },
               {
-                icon: <FaWallet className="text-mainBlue text-4xl mb-4 mx-auto" />,
+                icon: <FaWallet className="text-mainBlue dark:text-mainBlueLight text-4xl mb-4 mx-auto" />,
                 title: "Byudjet nazorati",
                 text: "Xarajat va daromadlar ustidan to'liq nazorat uchun sizga mos interfeys."
               }
             ].map((feature, index) => (
               <motion.div
                 key={index}
-                className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group"
+                className="bg-white dark:bg-gray-700 shadow-md rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group"
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -303,10 +303,10 @@ const Home = () => {
                 >
                   {feature.icon}
                 </motion.div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-mainBlue transition-colors duration-300">
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors duration-300">
                   {feature.title}
                 </h4>
-                <p className="text-gray-500 text-sm group-hover:text-gray-700 transition-colors duration-300">
+                <p className="text-gray-500 dark:text-gray-300 text-sm group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-300">
                   {feature.text}
                 </p>
               </motion.div>
@@ -316,7 +316,7 @@ const Home = () => {
       </section>
 
       {/* NEWS SECTION */}
-      <section className="py-24 bg-white font-main">
+      <section className="py-24 bg-white dark:bg-gray-900 font-main transition-colors duration-300">
         <div className="container mx-auto px-4 max-w-6xl">
           <motion.div
             className="text-center mb-14"
@@ -325,10 +325,10 @@ const Home = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-              So'nggi <TypingText text="yangiliklar" /> va <span className="text-mainRed">postlar</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+              So'nggi <TypingText text="yangiliklar" /> va <span className="text-mainRed dark:text-mainRedLight">postlar</span>
             </h2>
-            <p className="text-gray-500 mt-4 max-w-xl mx-auto text-lg">
+            <p className="text-gray-500 dark:text-gray-400 mt-4 max-w-xl mx-auto text-lg">
               Moliyaviy savodxonlik, innovatsiyalar va kundalik maslahatlar bilan tanishing.
             </p>
           </motion.div>
@@ -337,7 +337,7 @@ const Home = () => {
             {newsList.map((news, index) => (
               <motion.div
                 key={news.id}
-                className="group bg-gray-50 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-3"
+                className="group bg-gray-50 dark:bg-gray-700 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-3"
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -352,16 +352,16 @@ const Home = () => {
                   />
                 </div>
                 <div className="p-6 space-y-3">
-                  <span className="inline-block text-sm text-mainRed font-medium uppercase tracking-wider">
+                  <span className="inline-block text-sm text-mainRed dark:text-mainRedLight font-medium uppercase tracking-wider">
                     {news.category}
                   </span>
-                  <h3 className="text-xl font-semibold text-gray-800 group-hover:text-mainBlue transition-colors duration-300">
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors duration-300">
                     {news.title}
                   </h3>
-                  <p className="text-gray-600 text-sm">{news.desc}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">{news.desc}</p>
                   <Link
                     to={news.link}
-                    className="inline-flex items-center gap-1 text-mainBlue font-medium hover:underline transition group-hover:text-mainRed duration-300"
+                    className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"
                   >
                     Batafsil o'qish <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />
                   </Link>
@@ -378,7 +378,7 @@ const Home = () => {
           >
             <Link to="/news">
               <motion.button
-                className="py-3 px-6 rounded-full bg-white text-mainBlue border border-mainBlue hover:bg-mainBlue hover:text-white transition-all duration-300"
+                className="py-3 px-6 rounded-full bg-white dark:bg-gray-700 text-mainBlue dark:text-mainBlueLight border border-mainBlue dark:border-mainBlueLight hover:bg-mainBlue hover:text-white dark:hover:bg-mainBlueLight dark:hover:text-gray-900 transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -390,7 +390,7 @@ const Home = () => {
       </section>
 
       {/* SWIPER SECTION */}
-      <section className="bg-gray-50 py-24">
+      <section className="bg-gray-50 dark:bg-gray-800 py-24 transition-colors duration-300">
         <div className="container mx-auto px-4 max-w-6xl">
           <motion.div
             className="text-center mb-16"
@@ -399,10 +399,10 @@ const Home = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
               Moliyani <TypingText text="o'yin bilan o'rganing" />
             </h2>
-            <p className="text-gray-600 text-lg mt-4 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-300 text-lg mt-4 max-w-2xl mx-auto">
               MoliaUz'ning maxsus stol o'yini orqali moliyani o'rganish endi qiziqarli va interaktiv.
             </p>
           </motion.div>
@@ -421,7 +421,7 @@ const Home = () => {
               pagination={{ clickable: true }}
               autoplay={{ delay: 4000, disableOnInteraction: false }}
               loop={true}
-              className="rounded-2xl shadow-lg"
+              className="rounded-2xl shadow-lg dark:shadow-gray-700/50"
             >
               {[oyin1, oyin2, oyin3].map((img, idx) => (
                 <SwiperSlide key={idx}>
@@ -450,7 +450,7 @@ const Home = () => {
 const TypingText = ({ text }) => {
   return (
     <motion.span
-      className="text-mainBlue"
+      className="text-mainBlue dark:text-mainBlueLight"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}

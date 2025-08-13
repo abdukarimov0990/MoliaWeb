@@ -84,7 +84,7 @@ const News = () => {
             : allNews.filter((item) => item.category === selectedCategory);
 
     return (
-        <section className="py-20 bg-white font-main overflow-x-hidden">
+        <section className="py-20 bg-white dark:bg-gray-900 font-main overflow-x-hidden transition-colors duration-300">
             <div className="container mx-auto px-4 max-w-7xl">
                 <motion.div 
                     className="text-center mb-12"
@@ -92,10 +92,10 @@ const News = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
                         <span className="typing-animation"></span>{' '}
                         <motion.span 
-                            className="text-mainRed"
+                            className="text-mainRed dark:text-mainRedLight"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 1.5, duration: 1 }}
@@ -103,7 +103,7 @@ const News = () => {
                         </motion.span>
                     </h1>
                     <motion.p 
-                        className="text-gray-600 mt-4 text-lg max-w-2xl mx-auto"
+                        className="text-gray-600 dark:text-gray-400 mt-4 text-lg max-w-2xl mx-auto"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3, duration: 1 }}
@@ -123,10 +123,11 @@ const News = () => {
                     {categories.map((cat, index) => (
                         <motion.button
                             key={cat}
-                            className={`px-6 py-2 rounded-full border transition-all duration-200 text-sm font-medium ${selectedCategory === cat
-                                    ? 'bg-mainBlue text-white border-mainBlue'
-                                    : 'bg-white text-mainBlue border-mainBlue hover:bg-mainBlue hover:text-white'
-                                }`}
+                            className={`px-6 py-2 rounded-full border transition-all duration-200 text-sm font-medium ${
+                                selectedCategory === cat
+                                    ? 'bg-mainBlue dark:bg-mainBlueLight text-white border-mainBlue dark:border-mainBlueLight'
+                                    : 'bg-white dark:bg-gray-800 text-mainBlue dark:text-mainBlueLight border-mainBlue dark:border-mainBlueLight hover:bg-mainBlue dark:hover:bg-mainBlueLight hover:text-white'
+                            }`}
                             onClick={() => setSelectedCategory(cat)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -155,10 +156,11 @@ const News = () => {
                         {categories.map((cat, index) => (
                             <SwiperSlide key={cat} className="w-auto">
                                 <motion.button
-                                    className={`px-6 py-2 rounded-full border transition-all duration-200 text-sm font-medium whitespace-nowrap ${selectedCategory === cat
-                                            ? 'bg-mainBlue text-white border-mainBlue'
-                                            : 'bg-white text-mainBlue border-mainBlue hover:bg-mainBlue hover:text-white'
-                                        }`}
+                                    className={`px-6 py-2 rounded-full border transition-all duration-200 text-sm font-medium whitespace-nowrap ${
+                                        selectedCategory === cat
+                                            ? 'bg-mainBlue dark:bg-mainBlueLight text-white border-mainBlue dark:border-mainBlueLight'
+                                            : 'bg-white dark:bg-gray-800 text-mainBlue dark:text-mainBlueLight border-mainBlue dark:border-mainBlueLight hover:bg-mainBlue dark:hover:bg-mainBlueLight hover:text-white'
+                                    }`}
                                     onClick={() => setSelectedCategory(cat)}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
@@ -179,7 +181,7 @@ const News = () => {
                         {filteredNews.map((news, index) => (
                             <motion.div
                                 key={news.id}
-                                className="group bg-gray-50 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+                                className="group bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-xl dark:hover:shadow-gray-700/50 transition-all duration-300"
                                 initial={{ opacity: 0, y: 50 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 50 }}
@@ -198,7 +200,7 @@ const News = () => {
                                 </motion.div>
                                 <div className="p-6 space-y-3">
                                     <motion.span 
-                                        className="inline-block text-sm text-mainRed font-medium uppercase tracking-wider"
+                                        className="inline-block text-sm text-mainRed dark:text-mainRedLight font-medium uppercase tracking-wider"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: 0.3 }}
@@ -206,7 +208,7 @@ const News = () => {
                                         {news.category}
                                     </motion.span>
                                     <motion.h3 
-                                        className="text-xl font-semibold text-gray-800 group-hover:text-mainBlue transition-colors"
+                                        className="text-xl font-semibold text-gray-800 dark:text-white group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: 0.4 }}
@@ -214,7 +216,7 @@ const News = () => {
                                         {news.title}
                                     </motion.h3>
                                     <motion.p 
-                                        className="text-gray-600 text-sm"
+                                        className="text-gray-600 dark:text-gray-300 text-sm"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: 0.5 }}
@@ -228,7 +230,7 @@ const News = () => {
                                     >
                                         <Link
                                             to={news.link}
-                                            className="inline-flex items-center gap-1 text-mainBlue font-medium hover:underline transition group-hover:text-mainRed duration-300"
+                                            className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"
                                         >
                                             Batafsil o'qish <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />
                                         </Link>

@@ -7,7 +7,7 @@ const MainLayout = () => {
   const [cart, setCart] = useState([]);
 
   return (
-    <div className='min-h-screen flex flex-col'>
+    <div className='min-h-screen dark:bg-gray-800 flex flex-col'>
         <Header cart={cart} />
       <main className='grow mt-[140px]'>
         <Outlet context={{ cart, setCart }}/>
