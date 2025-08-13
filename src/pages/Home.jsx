@@ -135,7 +135,7 @@ const Home = () => {
               transition={{ delay: 0.6, duration: 0.8 }}
             >
               <Link
-                to="/contact"
+                to="/news"
                 className="inline-flex items-center gap-2 bg-mainBlue dark:bg-mainBlueLight text-white px-6 py-3 rounded-full text-sm md:text-base shadow-md hover:shadow-lg hover:bg-mainRed dark:hover:bg-mainRedLight transition-all duration-300 hover:-translate-y-1"
               >
                 Postlar <FaArrowRight size={16} />
