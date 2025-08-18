@@ -396,7 +396,7 @@ bot.on("text", async (ctx) => {
         case "title":
           session.data.title = txt;
           session.step = "category";
-          return ctx.reply("Kategoriya kiriting (masalan: Texnologiya, Umumiy):");
+          return ctx.reply("Kategoriya kiriting (masalan: Maslahat, Foydali, O'yin):");
         case "category":
           session.data.category = txt;
           session.step = "read_time";
