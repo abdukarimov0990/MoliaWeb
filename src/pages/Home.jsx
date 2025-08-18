@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { FaArrowRight, FaWallet, FaSearchDollar, FaClock, FaRegStickyNote, FaTimesCircle, FaLightbulb, FaCheckCircle, FaPiggyBank, FaChartLine, FaCoins } from 'react-icons/fa';
 import hero from '../assets/img/hero.png';
@@ -7,6 +7,8 @@ import oyin2 from '../assets/img/oyin2.jpg';
 import oyin3 from '../assets/img/oyin3.jpg';
 import patternRight from '../assets/img/rightPattern.png';
 import patternLeft from '../assets/img/leftPattern.png';
+import { fetchBlogs } from '../../bot/firebase';
+import { uploadImageToImgBB } from '../../bot/uploadImageToImgBB';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -79,6 +81,8 @@ const newsList = [
 ];
 
 const Home = () => {
+  const [allNews, setAllNews] = useState([]);
+
   useEffect(() => {
     // Typing animatsiyasi uchun
     const typed = new Typed('.typing-animation', {
@@ -93,6 +97,37 @@ const Home = () => {
     return () => {
       typed.destroy();
     };
+  }, []);
+  useEffect(() => {
+    const getNews = async () => {
+      try {
+        const news = await fetchBlogs();
+
+        const newsWithImgBB = await Promise.all(
+          news.map(async (item) => {
+            if (item.imageFile) {
+              try {
+                const url = await uploadImageToImgBB(item.imageFile);
+                return { ...item, photo: url };
+              } catch (err) {
+                console.error("Rasm yuklanmadi:", err);
+                return { ...item, photo: '' };
+              }
+            } else {
+              return item; // agar rasm URL allaqachon mavjud bo'lsa
+            }
+          })
+        );
+
+        setAllNews(newsWithImgBB);
+      } catch (err) {
+        console.error("Bloglarni olishda xato:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getNews();
   }, []);
 
   return (
@@ -343,37 +378,71 @@ const Home = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {newsList.map((news, index) => (
+          {allNews.slice(0,3).map((news, index) => (
               <motion.div
                 key={news.id}
-                className="group bg-gray-50 dark:bg-gray-700 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-3"
+                className="group bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-xl dark:hover:shadow-gray-700/50 transition-all duration-300"
                 initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -10, scale: 1.02 }}
               >
-                <div className="overflow-hidden">
+                {news.photo && (
                   <motion.img
-                    src={news.image}
+                    src={news.photo}
                     alt={news.title}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-52 object-cover"
+                    initial={{ scale: 1 }}
                     whileHover={{ scale: 1.1 }}
+                    transition={{ duration: 0.5 }}
                   />
-                </div>
+                )}
                 <div className="p-6 space-y-3">
-                  <span className="inline-block text-sm text-mainRed dark:text-mainRedLight font-medium uppercase tracking-wider">
-                    {news.category}
-                  </span>
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors duration-300">
-                    {news.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">{news.desc}</p>
-                  <Link
-                    to={news.link}
-                    className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"
+                  <motion.span
+                    className="inline-block text-sm text-mainRed dark:text-mainRedLight font-medium uppercase tracking-wider"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
                   >
-                    Batafsil o'qish <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />
-                  </Link>
+                    {news.category}
+                  </motion.span>
+                  <motion.h3
+                    className="text-xl font-semibold text-gray-800 dark:text-white group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    {news.title}
+                  </motion.h3>
+                  <motion.p
+                    className="text-gray-600 dark:text-gray-300 text-sm"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    {news.description}
+                  </motion.p>
+                  <motion.p
+                    className="text-gray-400 dark:text-gray-500 text-xs"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.55 }}
+                  >
+                    O'qish vaqti: {news.read_time} daqiqa
+                  </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <Link
+                      to={news.link}
+                      className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"
+                    >
+                      Batafsil o'qish <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />
+                    </Link>
+                  </motion.div>
                 </div>
               </motion.div>
             ))}

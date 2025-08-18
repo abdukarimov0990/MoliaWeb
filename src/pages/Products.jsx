@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaPhoneAlt, FaInstagram, FaTelegramPlane, FaTimes } from 'react-icons/fa';
+import {
+  FaStar,
+  FaRegStar,
+  FaHeart,
+  FaRegHeart,
+  FaPhoneAlt,
+  FaInstagram,
+  FaTelegramPlane,
+  FaTimes
+} from 'react-icons/fa';
 import { Link } from 'react-router';
-import { products } from '../data/data';
+import { fetchProducts } from '../../bot/firebase'; // Firebase fetch function
 
+// Product Card Component
 const ProductCard = ({ product, setShowContact }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const randomRating = Math.floor(Math.random() * 2) + 4; // 4 yoki 5
 
   return (
     <motion.div
@@ -19,7 +30,7 @@ const ProductCard = ({ product, setShowContact }) => {
     >
       <div className="relative">
         <img
-          src={product.image}
+          src={product.photo} // imgBB URL
           alt={product.name}
           className="w-full h-48 object-cover"
         />
@@ -42,15 +53,17 @@ const ProductCard = ({ product, setShowContact }) => {
         </div>
 
         <div className="flex items-center mb-3">
-          {[...Array(5)].map((_, i) => (
-            i < Math.floor(product.rating) ? (
-              <FaStar key={i} className="text-yellow-400" />
-            ) : (
-              <FaRegStar key={i} className="text-yellow-400" />
-            )
-          ))}
-          <span className="text-gray-600 dark:text-gray-300 text-sm ml-2">({product.reviews})</span>
-        </div>
+  {[...Array(5)].map((_, i) =>
+    i < randomRating ? (
+      <FaStar key={i} className="text-yellow-400" />
+    ) : (
+      <FaRegStar key={i} className="text-yellow-400" />
+    )
+  )}
+  <span className="text-gray-600 dark:text-gray-300 text-sm ml-2">
+    ({product.reviews})
+  </span>
+</div>
 
         <p className="text-gray-600 dark:text-gray-300 mb-4">
           {showFullDescription
@@ -88,8 +101,28 @@ const ProductCard = ({ product, setShowContact }) => {
   );
 };
 
+// Main Product Page
 const ProductPage = () => {
+  const [products, setProducts] = useState([]);
   const [showContact, setShowContact] = useState(false);
+
+  useEffect(() => {
+    const getProducts = async () => {
+      const data = await fetchProducts(); // Firebase’dan ma’lumotlarni olish
+      // Har bir elementni tekshirib, barcha kerakli fieldlarni qo‘shish
+      const formattedData = data.map(item => ({
+        id: item.id || item.key,
+        name: item.name || 'No Title',
+        description: item.description || 'No Description',
+        photo: item.photo || 'https://via.placeholder.com/300', // imgBB fallback
+        price: item.price || 0,
+        rating: item.rating || 0,
+        reviews: item.reviews || 0
+      }));
+      setProducts(formattedData);
+    };
+    getProducts();
+  }, []);
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen font-main transition-colors duration-300">
@@ -138,7 +171,6 @@ const ProductPage = () => {
             transition={{ duration: 0.3 }}
             className="relative bg-white dark:bg-gray-800 rounded-2xl w-96 p-8 shadow-2xl flex flex-col items-center gap-6 transition-colors duration-300"
           >
-            {/* Close button */}
             <button
               onClick={() => setShowContact(false)}
               className="absolute top-4 right-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full p-2 transition-colors duration-300"
@@ -147,16 +179,14 @@ const ProductPage = () => {
               <FaTimes className="text-gray-600 dark:text-gray-300 text-lg" />
             </button>
 
-            {/* Title */}
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Sotib olish uchun</h3>
             <p className="text-base text-gray-500 dark:text-gray-400 text-center">
               Quyidagi kanallar orqali biz bilan bog'laning
             </p>
 
-            {/* Buttons */}
             <div className="w-full flex flex-col gap-4">
               <a
-                href="https://t.me/your_username"
+                href="https://t.me/@MoliaUzBot"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 justify-center w-full py-3 rounded-xl bg-[#2AABEE] text-white font-medium text-lg shadow hover:scale-105 transition"
@@ -164,7 +194,6 @@ const ProductPage = () => {
                 <FaTelegramPlane size={22} />
                 <span>Telegram</span>
               </a>
-
               <a
                 href="https://instagram.com/your_username"
                 target="_blank"
@@ -184,7 +213,6 @@ const ProductPage = () => {
               </a>
             </div>
 
-            {/* Footer text */}
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-4">Yoki yozing: @your_username</p>
           </motion.div>
         </motion.div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
 import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -6,43 +6,47 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { products } from "../data/data";
-import { FaInstagram, FaPhoneAlt, FaTelegramPlane, FaTimes } from "react-icons/fa";
-
-// Foydalanuvchi izohlari
-const feedbacks = [
-  {
-    name: "Asadbek Raimbekov",
-    rating: 5,
-    text: `Kecha o'yin super bo'ldi🔥
-
-4-5 soat qanday o'tkanini bilmay qoldim, o'yin qizg'in bo'lganidan umuman o'yinga to'ymadim🥹
-Do'stlar va oila davrasida o'ynash uchun super o'yin bo'libdi!
-Yana o'yin bo'lsa, o'ylanmasdan boraman🔥`,
-  },
-  {
-    name: "Elnurbek Axmadaliyev",
-    rating: 5,
-    text: `O'yin absalyut darajada super!
-Kasblar, pul aylanishi, xarajatlar hammasi juda reallikka yaqin. Xohlasangiz oila davrasida, xohlasangiz do'stlaringiz bilan maza qilib o'ynashingiz mumkin. 
-Bu faqat o'yin emas, balki moliyaviy bilim berishi ham haqiqat! Qolaversa 5-6 marta o'ynasangiz, o'yindagi voqealarni real hayotga ko'chirishingiz ham hech gap emas!😉`,
-  },
-  {
-    name: "Javohir Igamberdiyev",
-    rating: 5,
-    text: `Molia Game oddiy o'yin emas, bosh qotiradigan, kulgi va raqobat aralashgan o'yin
-
-Kecha 3 soat qanday o'tganini o'zim ham bilmay qoldim. Vaqt yetmay ham qoldi oxirigacha borishga😅
-Zo'r o'tdi, hammaga yoqdi. O'zbekiston iqtisodiyotiga moslashtirilgani esa o'yinga boshqacha zavq qo'shgan.
-Do'stlar bilan birga o'ynasa, kayfiyat ham zo'r bo'ladi! O'ynashni tavsiya qilaman!`,
-  },
-];
+import { FaInstagram, FaLongArrowAltLeft, FaLongArrowAltRight, FaPhoneAlt, FaTelegramPlane, FaTimes } from "react-icons/fa";
+import { fetchProducts, fetchFeedbacks } from "../../bot/firebase"; // fetchProducts va fetchFeedbacks
+import { MdKeyboardArrowLeft } from "react-icons/md";
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const product = products.find((p) => p.id === parseInt(id));
+  const [product, setProduct] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showContact, setShowContact] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [showAllFeedback, setShowAllFeedback] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Mahsulotlarni olish
+        const products = await fetchProducts();
+        const selectedProduct = products.find((p) => p.id === id);
+        setProduct(selectedProduct || null);
+  
+        // Feedbacklarni olish (hamma feedbacklar)
+        const allFeedbacks = await fetchFeedbacks(); // fetchFeedbacks - barcha feedbacklarni qaytaradigan funksiyangiz
+        setFeedbacks(allFeedbacks || []);
+        
+      } catch (err) {
+        console.error("Ma'lumotlarni olishda xatolik:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [id]);
+  
+  if (loading) {
+    return (
+      <div className="text-center py-20 bg-white dark:bg-gray-900 min-h-screen">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Yuklanmoqda...</h2>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -57,12 +61,12 @@ export default function ProductDetail() {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen font-main transition-colors duration-300">
-
       {/* Mahsulot ma'lumotlari */}
       <section className="py-16 container mx-auto px-4">
+        <Link to="/products" className="mb-5 p-5 flex items-center gap-2"> <MdKeyboardArrowLeft size={24}></MdKeyboardArrowLeft>Bosh sahifa </Link>
         <div className="grid md:grid-cols-2 gap-10">
           <motion.img
-            src={product.image}
+            src={product.photo} // imgBB link
             alt={product.name}
             className="rounded-xl shadow-lg object-cover w-full h-[400px] dark:shadow-gray-700/50"
             initial={{ opacity: 0, x: -50 }}
@@ -91,43 +95,47 @@ export default function ProductDetail() {
       <section className="bg-white dark:bg-gray-800 py-16 transition-colors duration-300">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-10 text-gray-900 dark:text-white">Foydalanuvchi izohlari</h2>
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            spaceBetween={30}
-            slidesPerView={1.7}
-            navigation
-            pagination={{ clickable: true }}
-            autoplay={{ delay: 5000, disableOnInteraction: false }}
-            loop
-            className="pb-10 custom-swiper"
-          >
-            {feedbacks.map((fb, index) => (
-              <SwiperSlide key={index}>
-                <motion.div
-                  className="bg-white/20 dark:bg-gray-700/80 backdrop-blur-md border border-gray-300 dark:border-gray-600 h-[300px] p-8 rounded-xl shadow max-w-2xl mx-auto"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{fb.name}</h3>
-                  <div className="text-yellow-400 mb-4">
-                    {"⭐".repeat(fb.rating)}
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                    {showAll ? fb.text : fb.text.slice(0, 200) + "... "}
-                    {!showAll && (
-                      <button
-                        className="font-bold text-blue-600 dark:text-blue-400"
-                        onClick={() => setShowAll(true)}
-                      >
-                        Ko'proq
-                      </button>
-                    )}
-                  </p>
-                </motion.div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          {feedbacks.length > 0 ? (
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              spaceBetween={30}
+              slidesPerView={1.7}
+              navigation
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 5000, disableOnInteraction: false }}
+              loop
+              className="pb-10 custom-swiper"
+            >
+              {feedbacks.map((fb) => (
+                <SwiperSlide key={fb.id}>
+                  <motion.div
+                    className="bg-white/20 dark:bg-gray-700/80 backdrop-blur-md border border-gray-300 dark:border-gray-600 h-[300px] p-8 rounded-xl shadow max-w-2xl mx-auto"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{fb.name}</h3>
+                    <div className="text-yellow-400 mb-4">{"⭐".repeat(fb.rating)}</div>
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                      {showAllFeedback[fb.id] ? fb.text : fb.text.slice(0, 200) + "... "}
+                      {!showAllFeedback[fb.id] && (
+                        <button
+                          className="font-bold text-blue-600 dark:text-blue-400"
+                          onClick={() =>
+                            setShowAllFeedback((prev) => ({ ...prev, [fb.id]: true }))
+                          }
+                        >
+                          Ko'proq
+                        </button>
+                      )}
+                    </p>
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <p className="text-center text-gray-500 dark:text-gray-400">Hali izohlar mavjud emas</p>
+          )}
         </div>
       </section>
 
@@ -146,7 +154,6 @@ export default function ProductDetail() {
             transition={{ duration: 0.3 }}
             className="relative bg-white dark:bg-gray-800 rounded-2xl w-96 p-8 shadow-2xl flex flex-col items-center gap-6 transition-colors duration-300"
           >
-            {/* Close button */}
             <button
               onClick={() => setShowContact(false)}
               className="absolute top-4 right-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full p-2 transition"
@@ -154,17 +161,13 @@ export default function ProductDetail() {
             >
               <FaTimes className="text-gray-600 dark:text-gray-300 text-lg" />
             </button>
-
-            {/* Title */}
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Sotib olish uchun</h3>
             <p className="text-base text-gray-500 dark:text-gray-400 text-center">
               Quyidagi kanallar orqali biz bilan bog'laning
             </p>
-
-            {/* Buttons */}
             <div className="w-full flex flex-col gap-4">
               <a
-                href="https://t.me/your_username"
+                href="https://t.me/@MoliaUzBot"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 justify-center w-full py-3 rounded-xl bg-[#2AABEE] text-white font-medium text-lg shadow hover:scale-105 transition"
@@ -172,7 +175,6 @@ export default function ProductDetail() {
                 <FaTelegramPlane size={22} />
                 <span>Telegram</span>
               </a>
-
               <a
                 href="https://instagram.com/your_username"
                 target="_blank"
@@ -182,7 +184,6 @@ export default function ProductDetail() {
                 <FaInstagram size={22} />
                 <span>Instagram</span>
               </a>
-
               <a
                 href="tel:+998901234567"
                 className="flex items-center gap-4 justify-center w-full py-3 rounded-xl bg-green-600 text-white font-medium text-lg shadow hover:scale-105 transition"
@@ -191,8 +192,6 @@ export default function ProductDetail() {
                 <span>+998 90 123 45 67</span>
               </a>
             </div>
-
-            {/* Footer text */}
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-4">Yoki yozing: @your_username</p>
           </motion.div>
         </motion.div>
