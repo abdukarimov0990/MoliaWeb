@@ -15,7 +15,16 @@ const Header = () => {
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
-
+const fetchGoldPrice = async () => {
+  try {
+    const response = await fetch("https://goldpricez.com/api/v1/latest?currency=UZS");
+    const data = await response.json();
+    return data.price_per_gram; // yoki kerakli qiymat
+  } catch (error) {
+    console.error("Oltin narxini olishda xatolik:", error);
+  }
+};
+  
   useEffect(() => {
     const fetchRates = async () => {
       try {
@@ -75,15 +84,6 @@ const Header = () => {
     };
   }, [lastScrollY]);
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [darkMode]);
 
   const scrollVariants = {
     animate: {
