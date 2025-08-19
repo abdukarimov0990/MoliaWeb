@@ -13,7 +13,10 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 const rawChannel = process.env.CHANNEL_ID ?? "";
 const channelId = rawChannel.trim();
 const admins = process.env.ADMIN_ID
-  ? process.env.ADMIN_ID.split(",").map((s) => Number(s.trim())).filter(n => !Number.isNaN(n))
+  ? process.env.ADMIN_ID
+      .split(",")                  // vergul bo'yicha ajratish
+      .map((s) => Number(s.trim())) // har birini raqamga aylantirish
+      .filter(n => !Number.isNaN(n)) // NaNlarni olib tashlash
   : [];
 
 let channelAvailable = false;
@@ -453,7 +456,7 @@ bot.on("photo", async (ctx) => {
     if (session.type === "admin_blog" && session.step === "photo") {
       const url = await uploadToImgBB(fileId, ctx.telegram);
       if (!url) return ctx.reply("Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring.");
-
+    
       await pushData("blogs", {
         title: session.data.title,
         category: session.data.category,
@@ -462,12 +465,12 @@ bot.on("photo", async (ctx) => {
         photo: url,
         createdAt: Date.now()
       });
-
+    
       ctx.reply(`✅ Blog qo'shildi: ${session.data.title}`, mainMenu(true));
       resetSession(id);
       return;
     }
-
+    
     // --- If buyer uploading payment receipt ---
     if (session.type === "purchase" && (session.step === "await_receipt" || session.step === "awaiting_confirm_receipt")) {
       // Accept receipt
