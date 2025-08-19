@@ -37,7 +37,7 @@ const AboutUs = () => {
             transition={{ delay: 0.3, duration: 0.8 }}
           >
             Molia
-          </motion.span> — bu oddiy pul emas, <br /> bu{' '}
+          </motion.span> <br /> — bu oddiy pul emas, <br /> bu{' '}
           <span className="text-mainBlue dark:text-mainBlueLight typing-animation"></span>
         </motion.h1>
         <motion.p 
