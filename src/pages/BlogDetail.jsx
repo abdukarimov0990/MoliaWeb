@@ -97,6 +97,23 @@ const BlogDetail = () => {
       <div className="prose max-w-none dark:prose-invert">
         {blog.blocks && blog.blocks.map((block, idx) => renderBlock(block, idx))}
       </div>
+      <div className="max-w-xl mx-auto my-8 p-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-lg text-white text-center flex flex-col items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Obuna bo'ling!</h2>
+        <p className="text-sm sm:text-base">
+          Moliaviy bilimlaringizni oshirish va yangi maqolalarni birinchi bo‘lib ko‘rish uchun
+          <span className="font-semibold"> <a href="https://t.me/moliachi" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-300"> @moliachi </a></span>
+          telegram kanaliga azo bo‘ling.
+        </p>
+        <a
+          href="https://t.me/moliachi"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 px-6 py-3 bg-white text-blue-600 font-semibold rounded-full shadow-md hover:bg-blue-50 transition-colors duration-300"
+        >
+          Kanalga Azo Bo'lish
+        </a>
+      </div>
+
     </div>
   );
 };

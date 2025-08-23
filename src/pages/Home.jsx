@@ -205,14 +205,14 @@ const Home = () => {
           <motion.img
             src={patternRight}
             alt=""
-            className="w-32 absolute right-0 lg:right-20  rotate-90 top-0  dark:opacity-30"
+            className="w-32 absolute right-0  rotate-90 top-0  dark:opacity-30"
             animate={{ y: [0, 15, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
             <motion.img
             src={patternLeft}
             alt=""
-            className="w-32 absolute left-0 lg:left-20 rotate-90 bottom-0  dark:opacity-30"
+            className="w-32 absolute left-0  rotate-90 bottom-0  dark:opacity-30"
             animate={{ y: [0, 15, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />

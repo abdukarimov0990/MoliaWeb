@@ -79,7 +79,6 @@ const Header = () => {
     { to: "/about", label: "Haqimizda" },
     { to: "/news", label: "Yangiliklar" },
     { to: "/products", label: "Mahsulotlar" },
-    { to: "/contact", label: "Bog'lanish" },
   ];
   const [today, setToday] = useState("");
   useEffect(() => {
@@ -110,9 +109,10 @@ const Header = () => {
               variants={scrollVariants} 
               animate="animate" 
             >
-              Ushbu valyuta va oltin narxlari bugungi {today}  sana bilan yangilanmoqda!  1 USD = {rates.usd ? rates.usd.toLocaleString() + " so'm" : "..."}
-              | 1 EUR = {rates.eur ? rates.eur.toLocaleString() + " so'm" : "..."}
-              | 1 gr OLTIN = {rates.gold ? rates.gold.toLocaleString() + " so'm" : "..."}
+Ushbu valyuta va oltin narxlari bugungi {today} sana bilan yangilanmoqda!  
+1 USD = {rates.usd ? rates.usd.toLocaleString() + " so'm" : "..."} |{" "} 
+1 EUR = {rates.eur ? rates.eur.toLocaleString() + " so'm" : "..."} |{" "} 
+1 gr OLTIN = {rates.gold ? rates.gold.toLocaleString() + " so'm" : "..."}
             </motion.div>
           </motion.div>
                     <motion.div
@@ -128,9 +128,9 @@ const Header = () => {
                       variants={scrollVariants} 
                       animate="animate" 
                     >
-                      1 USD = {rates.usd ? rates.usd.toLocaleString() + " so'm" : "..."}
-                      | 1 EUR = {rates.eur ? rates.eur.toLocaleString() + " so'm" : "..."}
-                      | 1 gr OLTIN = {rates.gold ? rates.gold.toLocaleString() + " so'm" : "..."}
+                      1 USD = {rates.usd ? rates.usd.toLocaleString() + " so'm " : "..." }
+                      | 1 EUR = {rates.eur ? rates.eur.toLocaleString() + " so'm " : "..."}
+                      | 1 gr OLTIN = {rates.gold ? rates.gold.toLocaleString() + " so'm " : "..."}
                     </motion.div>
                   </motion.div>
 </div>        

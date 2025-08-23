@@ -74,7 +74,7 @@ const Contact = () => {
           <div className="grid grid-cols-2 gap-5">
             {/* Instagram */}
             <motion.a 
-              href="https://instagram.com/yourhandle" 
+              href="https://www.instagram.com/molia.uz" 
               target="_blank" 
               className="group p-5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:shadow-md transition-colors duration-300"
               initial={{ opacity: 0, y: 20 }}
@@ -91,7 +91,7 @@ const Contact = () => {
 
             {/* Telegram */}
             <motion.a 
-              href="https://t.me/yourhandle" 
+              href="https://t.me/moliachi" 
               target="_blank" 
               className="group p-5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:shadow-md transition-colors duration-300"
               initial={{ opacity: 0, y: 20 }}
@@ -108,7 +108,7 @@ const Contact = () => {
 
             {/* Facebook */}
             <motion.a 
-              href="https://facebook.com" 
+              href="http://www.youtube.com/@moliauz" 
               target="_blank" 
               className="group col-span-2 p-5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl hover:shadow-md transition-colors duration-300"
               initial={{ opacity: 0, y: 20 }}
