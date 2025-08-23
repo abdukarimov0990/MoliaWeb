@@ -64,13 +64,13 @@ const Footer = () => {
         <div className="flex flex-col gap-4 w-full max-w-sm">
           <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-600 dark:text-gray-400">Bizni kuzatib boring</h3>
           <div className="flex gap-4 text-xl text-gray-500 dark:text-gray-400">
-            <a href="#" className="hover:text-black dark:hover:text-white transition-colors duration-300">
+            <a href="http://www.youtube.com/@moliauz" className="hover:text-black dark:hover:text-white transition-colors duration-300">
               <FaYoutube />
             </a>
-            <a href="#" className="hover:text-black dark:hover:text-white transition-colors duration-300">
+            <a href="https://www.instagram.com/molia.uz" className="hover:text-black dark:hover:text-white transition-colors duration-300">
               <FaInstagram />
             </a>
-            <a href="#" className="hover:text-black dark:hover:text-white transition-colors duration-300">
+            <a href="https://t.me/moliauz" className="hover:text-black dark:hover:text-white transition-colors duration-300">
               <FaTelegramPlane />
             </a>
           </div>
