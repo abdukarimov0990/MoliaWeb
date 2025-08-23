@@ -81,7 +81,7 @@ const Footer = () => {
 
       {/* Bottom section */}
       <div className="text-center text-xs text-gray-400 dark:text-gray-500 py-6 border-t border-gray-100 dark:border-gray-800">
-        © {new Date().getFullYear()} Molia. Barcha huquqlar himoyalangan.
+        © {new Date().getFullYear()} Molia MCHJ. Barcha huquqlar himoyalangan.
       </div>
     </footer>
   )
