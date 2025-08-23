@@ -76,21 +76,6 @@ const Footer = () => {
           </div>
 
           {/* Email Subscription */}
-          <form className="mt-6">
-            <label className="text-sm mb-2 block text-gray-600 dark:text-gray-400">
-              Yangiliklarga obuna bo'ling
-            </label>
-            <div className="flex">
-              <input
-                type="email"
-                placeholder="Emailingiz"
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-l-full focus:outline-none text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200"
-              />
-              <button className="px-5 py-2 bg-black dark:bg-gray-700 text-white dark:text-gray-200 rounded-r-full text-sm hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors duration-300">
-                Yuborish
-              </button>
-            </div>
-          </form>
         </div>
       </div>
 
