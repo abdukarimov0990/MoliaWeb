@@ -119,11 +119,11 @@ const AboutUs = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               whileHover={{ y: -5 }}
             >
-              <h3 className="text-2xl sm:text-3xl text-center font-semibold text-gray-800 dark:text-white mb-6 sm:mb-8">
+              <h3 className="text-2xl sm:text-3xl text-center font-semibold text-gray-800 dark:text-white mb-6 sm:mb-12">
                 "ZanjirSikli" — <span className='text-mainRed dark:text-mainRedLight'>nima bu?</span>
               </h3>
               <motion.p 
-                className="text-gray-600 dark:text-gray-300 text-center text-base sm:text-xl"
+                className="text-gray-600  flex items-center  dark:text-gray-300 text-center text-base sm:text-xl"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
