@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router';
 import { FaPhoneAlt, FaBars, FaTimes, FaDollarSign, FaEuroSign, FaCoins } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/img/result.png';
+import { fetchRates } from '../../bot/firebase'; // Firebase rates fetch
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,47 +16,22 @@ const Header = () => {
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
-const fetchGoldPrice = async () => {
-  try {
-    const response = await fetch("https://goldpricez.com/api/v1/latest?currency=UZS");
-    const data = await response.json();
-    return data.price_per_gram; // yoki kerakli qiymat
-  } catch (error) {
-    console.error("Oltin narxini olishda xatolik:", error);
-  }
-};
-  
+
+  // --- Firebase rates fetch ---
   useEffect(() => {
-    const fetchRates = async () => {
-      try {
-        const usdRes = await fetch("https://open.er-api.com/v6/latest/USD");
-        const usdData = await usdRes.json();
-        const usdToUzs = usdData.rates.UZS;
-        const eurToUsd = usdData.rates.EUR;
-
-        const goldRes = await fetch("https://www.goldapi.io/api/XAU/USD", {
-          headers: {
-            "x-access-token": "goldapi-1yqq19me38w2r7-io",
-            "Content-Type": "application/json"
-          }
-        });
-        const goldData = await goldRes.json();
-        const goldPricePerGramUSD = goldData.price / 31.1035;
-        const goldInUZS = goldPricePerGramUSD * usdToUzs;
-
-        setRates({
-          usd: usdToUzs,
-          eur: eurToUsd * usdToUzs,
-          gold: goldInUZS,
-        });
-      } catch (err) {
-        console.error("Kurslarni olishda xatolik:", err);
-      }
+    const getRates = async () => {
+      const data = await fetchRates();
+      setRates(data);
     };
 
-    fetchRates();
+    getRates();
+
+    // Har 60 sekund yangilash
+    const interval = setInterval(getRates, 60000);
+    return () => clearInterval(interval);
   }, []);
 
+  // --- Scroll bilan header ko‘rinishi ---
   useEffect(() => {
     let timeoutId;
     const handleScroll = () => {
@@ -84,7 +60,6 @@ const fetchGoldPrice = async () => {
     };
   }, [lastScrollY]);
 
-
   const scrollVariants = {
     animate: {
       x: ["100%", "-100%"],
@@ -106,36 +81,59 @@ const fetchGoldPrice = async () => {
     { to: "/products", label: "Mahsulotlar" },
     { to: "/contact", label: "Bog'lanish" },
   ];
+  const [today, setToday] = useState("");
+  useEffect(() => {
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, "0");   // kun
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // oy (0-indexed)
+    const year = date.getFullYear();
 
-  const ratesArray = [
-    { icon: <FaDollarSign />, label: "1 USD", value: rates.usd ? `${rates.usd.toFixed(2)} so'm` : "..." },
-    { icon: <FaEuroSign />, label: "1 EUR", value: rates.eur ? `${rates.eur.toFixed(2)} so'm` : "..." },
-    { icon: <FaCoins />, label: "1g OLTIN", value: rates.gold ? `${Math.round(rates.gold).toLocaleString()} so'm` : "..." },
-  ];
+    setToday(`${day}/${month}/${year}`);
+  }, []);
 
   return (
     <>
       {/* Currency rates bar */}
       <AnimatePresence>
         {showHeader && (
+          <div className="">
           <motion.div
             key="rates-bar"
-            className="fixed top-0 left-0 right-0 bg-gray-100 dark:bg-gray-700 py-2 z-30 overflow-hidden"
+            className=" lg:fixed top-0 left-0 right-0 bg-gray-100 py-2 z-30 overflow-hidden"
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -50, opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
           >
-            <motion.div className="flex gap-3 sm:gap-4 md:gap-6 px-4" variants={scrollVariants} animate="animate">
-              {ratesArray.map((rate, idx) => (
-                <span key={idx} className="whitespace-nowrap flex items-center text-sm sm:text-base">
-                  {rate.icon}
-                  <span className="hidden lg:inline ml-1">{rate.label} = </span>
-                  <span className="ml-1">{rate.value}</span>
-                </span>
-              ))}
+            <motion.div 
+              className=" gap-3 w-full px-4 text-gray-800 dark:text-gray-200"
+              variants={scrollVariants} 
+              animate="animate" 
+            >
+              Ushbu valyuta va oltin narxlari bugungi {today}  sana bilan yangilanmoqda!  1 USD = {rates.usd ? rates.usd.toLocaleString() + " so'm" : "..."}
+              | 1 EUR = {rates.eur ? rates.eur.toLocaleString() + " so'm" : "..."}
+              | 1 gr OLTIN = {rates.gold ? rates.gold.toLocaleString() + " so'm" : "..."}
             </motion.div>
           </motion.div>
+                    <motion.div
+                    key="rates-bar"
+                    className="fixed lg:hidden top-0 left-0 right-0 bg-gray-100 py-2 z-30 overflow-hidden"
+                    initial={{ y: -50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -50, opacity: 0 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                  >
+                    <motion.div 
+                      className=" gap-3 w-full px-4 text-gray-800 dark:text-gray-200"
+                      variants={scrollVariants} 
+                      animate="animate" 
+                    >
+                      1 USD = {rates.usd ? rates.usd.toLocaleString() + " so'm" : "..."}
+                      | 1 EUR = {rates.eur ? rates.eur.toLocaleString() + " so'm" : "..."}
+                      | 1 gr OLTIN = {rates.gold ? rates.gold.toLocaleString() + " so'm" : "..."}
+                    </motion.div>
+                  </motion.div>
+</div>        
         )}
       </AnimatePresence>
 
@@ -148,7 +146,7 @@ const fetchGoldPrice = async () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -100, opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="fixed w-full font-main border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 z-40 top-[40px] sm:top-[40px] transition-colors duration-300"
+            className="fixed w-full font-main border-b border-white/20 dark:border-gray-700/30 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md shadow-lg z-40 top-[40px] sm:top-[40px] transition-colors duration-300"
           >
             <div className="container mx-auto px-4 flex items-center justify-between py-3">
               {/* Logo */}
@@ -167,7 +165,7 @@ const fetchGoldPrice = async () => {
               </Link>
 
               {/* Desktop navigation */}
-              <nav className="hidden md:flex gap-4 lg:gap-6 text-gray-700 dark:text-gray-300 text-base font-medium">
+              <nav className="hidden md:flex gap-4 lg:gap-6 text-gray-800 dark:text-gray-200 text-base font-medium">
                 {navLinks.map((link) => (
                   <NavLink
                     key={link.to}
@@ -186,7 +184,7 @@ const fetchGoldPrice = async () => {
               {/* Desktop CTA */}
               <div className="hidden md:flex items-center gap-4">
                 <Link to="/contact">
-                  <button className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-mainBlue dark:bg-mainBlueLight text-white text-sm sm:text-base shadow-sm hover:bg-mainRed dark:hover:bg-mainRedLight transition-colors">
+                  <button className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-mainBlue dark:bg-mainBlueLight text-white text-sm sm:text-base shadow-md hover:bg-mainRed dark:hover:bg-mainRedLight transition-colors">
                     <FaPhoneAlt size={16} className="sm:size-5" />
                     <span>Bog'lanish</span>
                   </button>

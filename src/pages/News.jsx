@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import 'swiper/css';
 import Typed from 'typed.js';
 import { fetchBlogs } from '../../bot/firebase';
-import { uploadImageToImgBB } from '../../bot/uploadImageToImgBB';
+import  uploadImageToImgBB  from '../../bot/uploadImageToImgBB';
 
 const categories = ["Barchasi", "Maslahat", "Foydali", "O'yin"];
 
@@ -44,10 +44,10 @@ const News = () => {
             if (item.imageFile) {
               try {
                 const url = await uploadImageToImgBB(item.imageFile);
-                return { ...item, photo: url };
+                return { ...item, cover: url };
               } catch (err) {
                 console.error("Rasm yuklanmadi:", err);
-                return { ...item, photo: '' };
+                return { ...item, cover: '' };
               }
             } else {
               return item; // agar rasm URL allaqachon mavjud bo'lsa
@@ -111,9 +111,9 @@ const News = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -10, scale: 1.02 }}
               >
-                {news.photo && (
+                {news.cover && (
                   <motion.img
-                    src={news.photo}
+                    src={news.cover}
                     alt={news.title}
                     className="w-full h-52 object-cover"
                     initial={{ scale: 1 }}
@@ -160,7 +160,7 @@ const News = () => {
                     transition={{ delay: 0.6 }}
                   >
                     <Link
-                      to={news.link}
+                      to={`/news/${news.id}`}
                       className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"
                     >
                       Batafsil o'qish <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />

@@ -8,8 +8,7 @@ import oyin3 from '../assets/img/oyin3.jpg';
 import patternRight from '../assets/img/rightPattern.png';
 import patternLeft from '../assets/img/leftPattern.png';
 import { fetchBlogs } from '../../bot/firebase';
-import { uploadImageToImgBB } from '../../bot/uploadImageToImgBB';
-
+import uploadImageToImgBB from '../../bot/uploadImageToImgBB';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -108,10 +107,10 @@ const Home = () => {
             if (item.imageFile) {
               try {
                 const url = await uploadImageToImgBB(item.imageFile);
-                return { ...item, photo: url };
+                return { ...item, cover: url };
               } catch (err) {
                 console.error("Rasm yuklanmadi:", err);
-                return { ...item, photo: '' };
+                return { ...item, cover: '' };
               }
             } else {
               return item; // agar rasm URL allaqachon mavjud bo'lsa
@@ -259,34 +258,34 @@ const Home = () => {
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
-            {tips.map((tip, index) => (
-              <motion.div
-                key={index}
-                className="relative flex flex-col items-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 group bg-white dark:bg-gray-700"
-                style={{
-                  backdropFilter: 'blur(8px)',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                }}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                {/* Stroke effect */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 pointer-events-none" />
+  {tips.map((tip, index) => (
+    <motion.div
+      key={index}
+      className="relative flex flex-col items-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 group bg-white dark:bg-gray-700"
+      style={{
+        backdropFilter: 'blur(8px)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      }}
+      initial={{ opacity: 0, x: -50 }}      // chap tomondan boshlash
+      whileInView={{ opacity: 1, x: 0 }}    // o‘z joyiga kelish
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+    >
+      {/* Stroke effect */}
+      <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-500 pointer-events-none" />
 
-                <div className="mb-4 scale-150 group-hover:scale-[1.7] transition-transform duration-500">
-                  {tip.icon}
-                </div>
-                <h3 className="text-2xl text-center font-semibold text-mainBlue dark:text-mainBlueLight group-hover:text-mainRed dark:group-hover:text-mainRedLight transition-colors duration-300">
-                  {tip.title}
-                </h3>
-                <p className="text-base text-center text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-100 transition-colors duration-300">
-                  {tip.text}
-                </p>
-              </motion.div>
-            ))}
-          </div>
+      <div className="mb-4 scale-150 group-hover:scale-[1.7] transition-transform duration-500">
+        {tip.icon}
+      </div>
+      <h3 className="text-2xl text-center font-semibold text-mainBlue dark:text-mainBlueLight group-hover:text-mainRed dark:group-hover:text-mainRedLight transition-colors duration-300">
+        {tip.title}
+      </h3>
+      <p className="text-base text-center text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-100 transition-colors duration-300">
+        {tip.text}
+      </p>
+    </motion.div>
+  ))}
+</div>
         </div>
       </section>
 
@@ -333,27 +332,41 @@ const Home = () => {
                 text: "Xarajat va daromadlar ustidan to'liq nazorat uchun sizga mos interfeys."
               }
             ].map((feature, index) => (
-              <motion.div
-                key={index}
-                className="bg-white dark:bg-gray-700 shadow-md rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group"
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-              >
-                <motion.div
-                  className="group-hover:scale-110 transition-transform duration-500"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  {feature.icon}
-                </motion.div>
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors duration-300">
-                  {feature.title}
-                </h4>
-                <p className="text-gray-500 dark:text-gray-300 text-sm group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-300">
-                  {feature.text}
-                </p>
-              </motion.div>
+<motion.div
+  key={index}
+  className="bg-white dark:bg-gray-700 shadow-md rounded-2xl p-6 hover:shadow-xl transition-all duration-300 group"
+  initial={{ opacity: 0, y: -30, scale: 0.8 }}
+  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+  viewport={{ once: true }}
+  transition={{
+    type: "spring", // tabiiy sakrash effekti
+    stiffness: 120,
+    damping: 10,
+    mass: 0.8,
+  }}
+  whileHover={{
+    scale: 1.05,
+    rotate: [0, 2, -2, 0], // yumshoq aylanma
+    transition: { duration: 0.6, ease: "easeInOut" }
+  }}
+>
+  <motion.div
+    className="mb-4"
+    initial={{ rotate: 0 }}
+    whileHover={{ rotate: 10 }}
+    transition={{ duration: 0.5 }}
+  >
+    {feature.icon}
+  </motion.div>
+
+  <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors duration-300">
+    {feature.title}
+  </h4>
+
+  <p className="text-gray-500 dark:text-gray-300 text-sm group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-300">
+    {feature.text}
+  </p>
+</motion.div>
             ))}
           </div>
         </div>
@@ -388,9 +401,9 @@ const Home = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -10, scale: 1.02 }}
               >
-                {news.photo && (
+                {news.cover && (
                   <motion.img
-                    src={news.photo}
+                    src={news.cover}
                     alt={news.title}
                     className="w-full h-52 object-cover"
                     initial={{ scale: 1 }}
@@ -437,8 +450,7 @@ const Home = () => {
                     transition={{ delay: 0.6 }}
                   >
                     <Link
-                      to={news.link}
-                      className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"
+to={`/news/${news.id}`}                      className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"
                     >
                       Batafsil o'qish <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />
                     </Link>

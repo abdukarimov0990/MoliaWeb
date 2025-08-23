@@ -57,3 +57,19 @@ export const fetchBlogs = async () => fetchFromDB('blogs');
 export const fetchOrders = async () => fetchFromDB('orders');
 export const fetchProducts = async () => fetchFromDB('products');
 export const fetchFeedbacks = async () => fetchFromDB('feedback'); // Feedbacklar
+
+// --- Rates fetch funksiyasi ---
+export const fetchRates = async () => {
+    try {
+        const dataRef = ref(db, 'settings/rates');
+        const snapshot = await get(dataRef);
+        if (snapshot.exists()) {
+            return snapshot.val(); // { usd, eur, gold, updatedAt }
+        } else {
+            return { usd: null, eur: null, gold: null, updatedAt: null };
+        }
+    } catch (err) {
+        console.error('Firebase fetchRates error:', err);
+        return { usd: null, eur: null, gold: null, updatedAt: null };
+    }
+};

@@ -1,18 +1,29 @@
-// uploadImageToImgBB.js
-export const uploadImageToImgBB = async (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const apiKey = '6e61467d00c5193604e4bfd5aea70c5d';
+export default function uploadImageToImgBB(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-        method: 'POST',
-        body: formData
-    });
+    reader.onloadend = () => {
+      const base64Image = reader.result.split(',')[1]; // "data:image/png;base64,..."
+      const formData = new FormData();
+      formData.append("key", process.env.REACT_APP_IMGBB_API_KEY); // .env da REACT_APP_ prefiksi bilan
+      formData.append("image", base64Image);
 
-    const data = await res.json();
-    if (data.success) {
-        return data.data.url;
-    } else {
-        throw new Error('Rasm yuklanmadi');
-    }
-};
+      fetch("https://api.imgbb.com/1/upload", {
+        method: "POST",
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data.url) {
+            resolve(data.data.url);
+          } else {
+            reject(new Error("Upload failed: " + JSON.stringify(data)));
+          }
+        })
+        .catch(err => reject(err));
+    };
+
+    reader.onerror = () => reject(new Error("File reading failed"));
+    reader.readAsDataURL(file);
+  });
+}

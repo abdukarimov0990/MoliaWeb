@@ -8,6 +8,7 @@ import Game from './pages/Products'
 import Contact from './pages/Contact'
 import ProductPage from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
+import BlogDetail from './pages/BlogDetail'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -18,6 +19,8 @@ const router = createBrowserRouter(
       <Route path="/products" element={<ProductPage />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/products/:id" element={<ProductDetail/>}/>
+      <Route path="/news/:id" element={<BlogDetail/>}/>
+
     </Route>
   )
 )
