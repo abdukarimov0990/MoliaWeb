@@ -1,26 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router';
-import { Swiper, SwiperSlide } from 'swiper/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import 'swiper/css';
 import Typed from 'typed.js';
-import { fetchBlogs } from '../../bot/firebase';
-import  uploadImageToImgBB  from '../../bot/uploadImageToImgBB';
-
-const categories = ["Barchasi", "Maslahat", "Foydali", "O'yin"];
+import { fetchBlogs, fetchCategories } from '../../bot/firebase';
+import uploadImageToImgBB from '../../bot/uploadImageToImgBB';
+import 'swiper/css';
 
 const News = () => {
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [allNews, setAllNews] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const typingRef = useRef(null); // Typed.js uchun ref
+  const typingRef = useRef(null);
 
-  // Typed.js init
   useEffect(() => {
     if (!typingRef.current) return;
-
     const typed = new Typed(typingRef.current, {
       strings: ['yangiliklar', 'postlar', 'maslahatlar'],
       typeSpeed: 100,
@@ -29,63 +25,84 @@ const News = () => {
       showCursor: true,
       cursorChar: '|',
     });
-
     return () => typed.destroy();
   }, []);
 
-  // Bloglarni olish va rasmni imgBB orqali yuklash
   useEffect(() => {
-    const getNews = async () => {
+    const getData = async () => {
       try {
+        // Blogs
         const news = await fetchBlogs();
+        const newsArray = Array.isArray(news)
+          ? news
+          : Object.values(news).filter(item => typeof item === 'object');
 
         const newsWithImgBB = await Promise.all(
-          news.map(async (item) => {
+          newsArray.map(async (item) => {
             if (item.imageFile) {
               try {
                 const url = await uploadImageToImgBB(item.imageFile);
-                return { ...item, cover: url };
-              } catch (err) {
-                console.error("Rasm yuklanmadi:", err);
-                return { ...item, cover: '' };
+                return { ...item, photo: url };
+              } catch {
+                return { ...item, photo: '' };
               }
-            } else {
-              return item; // agar rasm URL allaqachon mavjud bo'lsa
             }
+            return item;
           })
         );
-
         setAllNews(newsWithImgBB);
+
+        // Categories - yangi usul
+        const data = await fetchCategories();
+        console.log('Kategoriyalar ma\'lumoti:', data);
+        
+        // Obyektni massivga aylantiramiz (faqat qiymatlarni olamiz)
+        let categoriesArray = [];
+        if (data && typeof data === 'object') {
+          categoriesArray = Object.values(data).filter(item => 
+            typeof item === 'string' && item.trim() !== ''
+          );
+        }
+        
+        console.log('Filtrlangan kategoriyalar:', categoriesArray);
+        setCategories(categoriesArray);
+
       } catch (err) {
-        console.error("Bloglarni olishda xato:", err);
+        console.error('Ma\'lumotlarni olishda xato:', err);
       } finally {
         setLoading(false);
       }
     };
-
-    getNews();
+    getData();
   }, []);
 
-  const filteredNews =
-    selectedCategory === "Barchasi"
-      ? allNews
-      : allNews.filter((item) => item.category === selectedCategory);
+  const filteredNews = selectedCategory === "Barchasi"
+    ? allNews
+    : allNews.filter(item => item.category === selectedCategory);
 
   if (loading) return <p className="text-center py-20">Yuklanmoqda...</p>;
 
   return (
     <section className="py-20 bg-white dark:bg-gray-900 font-main overflow-x-hidden transition-colors duration-300">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* Typed.js */}
         <h2 className="text-3xl md:text-4xl font-bold mb-6">
           <span ref={typingRef}></span>
         </h2>
 
-        {/* Kategoriya filter */}
-        <div className="flex gap-4 mb-10">
-          {categories.map((cat) => (
+        <div className="flex gap-4 mb-10 flex-wrap">
+          <button
+            onClick={() => setSelectedCategory("Barchasi")}
+            className={`px-4 py-2 rounded-full font-medium transition-colors duration-300 ${
+              selectedCategory === "Barchasi"
+                ? 'bg-mainBlue text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+            }`}
+          >
+            Barchasi
+          </button>
+          {categories.map((cat, index) => (
             <button
-              key={cat}
+              key={index}
               onClick={() => setSelectedCategory(cat)}
               className={`px-4 py-2 rounded-full font-medium transition-colors duration-300 ${
                 selectedCategory === cat
@@ -98,12 +115,18 @@ const News = () => {
           ))}
         </div>
 
-        {/* Bloglar grid */}
+        {/* Debug uchun kategoriyalarni ko'rsatish */}
+        {categories.length === 0 && !loading && (
+          <div className="text-center text-red-500 mb-4">
+            Kategoriyalar topilmadi. Ma'lumot: {JSON.stringify(categories)}
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           <AnimatePresence>
             {filteredNews.map((news, index) => (
               <motion.div
-                key={news.id}
+                key={news.id || index}
                 className="group bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-xl dark:hover:shadow-gray-700/50 transition-all duration-300"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -111,9 +134,9 @@ const News = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -10, scale: 1.02 }}
               >
-                {news.cover && (
+                {news.photo && (
                   <motion.img
-                    src={news.cover}
+                    src={news.photo}
                     alt={news.title}
                     className="w-full h-52 object-cover"
                     initial={{ scale: 1 }}
@@ -122,43 +145,21 @@ const News = () => {
                   />
                 )}
                 <div className="p-6 space-y-3">
-                  <motion.span
-                    className="inline-block text-sm text-mainRed dark:text-mainRedLight font-medium uppercase tracking-wider"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
+                  <motion.span className="inline-block text-sm text-mainRed dark:text-mainRedLight font-medium uppercase tracking-wider">
                     {news.category}
                   </motion.span>
-                  <motion.h3
-                    className="text-xl font-semibold text-gray-800 dark:text-white group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
+                  <motion.h3 className="text-xl font-semibold text-gray-800 dark:text-white group-hover:text-mainBlue dark:group-hover:text-mainBlueLight transition-colors">
                     {news.title}
                   </motion.h3>
-                  <motion.p
-                    className="text-gray-600 dark:text-gray-300 text-sm"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    {news.description}
+                  <motion.p className="text-gray-600 dark:text-gray-300 text-sm">
+                    {typeof news.description === 'string' 
+                      ? news.description 
+                      : Object.values(news.description).join(' ')}
                   </motion.p>
-                  <motion.p
-                    className="text-gray-400 dark:text-gray-500 text-xs"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.55 }}
-                  >
+                  <motion.p className="text-gray-400 dark:text-gray-500 text-xs">
                     O'qish vaqti: {news.read_time} daqiqa
                   </motion.p>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                  >
+                  <motion.div>
                     <Link
                       to={`/news/${news.id}`}
                       className="inline-flex items-center gap-1 text-mainBlue dark:text-mainBlueLight font-medium hover:underline transition group-hover:text-mainRed dark:group-hover:text-mainRedLight duration-300"

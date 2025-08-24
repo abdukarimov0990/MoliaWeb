@@ -23,11 +23,29 @@ let channelAvailable = false;
 const sessions = new Map();
 const getSession = (id) => {
   if (!sessions.has(id))
-    sessions.set(id, { type: null, step: null, data: {}, createdAt: Date.now() });
+    sessions.set(id, { 
+      type: null, 
+      step: null, 
+      data: {}, 
+      createdAt: Date.now(),
+      messageIds: [] // Xabarlarni saqlash uchun
+    });
   return sessions.get(id);
 };
-const resetSession = (id) =>
-  sessions.set(id, { type: null, step: null, data: {}, createdAt: Date.now() });
+
+const resetSession = (id) => {
+  const session = getSession(id);
+  // Oldingi xabarlarni o'chirish
+  session.messageIds.forEach(msgId => {
+    try {
+      bot.telegram.deleteMessage(id, msgId);
+    } catch (e) {
+      console.log("Xabarni o'chirishda xato:", e.message);
+    }
+  });
+  sessions.set(id, { type: null, step: null, data: {}, createdAt: Date.now(), messageIds: [] });
+};
+
 const isAdmin = (id) => admins.includes(Number(id));
 
 // ---------- FIREBASE HELPERS ----------
@@ -40,6 +58,7 @@ const fetchData = async (path) => {
     return {};
   }
 };
+
 const pushData = async (path, data) => {
   try {
     const newRef = push(ref(db, path));
@@ -50,16 +69,29 @@ const pushData = async (path, data) => {
     return { ok: false, error: err };
   }
 };
+
 const setData = async (path, data) => {
   try {
-    await update(ref(db, path), data);
+    // Agar data null yoki undefined bo'lsa, uni o'chiramiz
+    if (data === null || data === undefined) {
+      await set(ref(db, path), null);
+      return true;
+    }
+    
+    // Agar data object bo'lsa, update qilamiz
+    if (typeof data === 'object' && !Array.isArray(data)) {
+      await update(ref(db, path), data);
+      return true;
+    }
+    
+    // Boshqa holatda set qilamiz
+    await set(ref(db, path), data);
     return true;
   } catch (err) {
     console.error("Firebase set/update error:", err);
     return false;
   }
 };
-
 // ---------- UTILS ----------
 const parseNumber = (txt) => {
   if (typeof txt !== "string") return Number(txt);
@@ -67,12 +99,14 @@ const parseNumber = (txt) => {
   const num = Number(clean);
   return Number.isNaN(num) ? null : num;
 };
+
 const formatUZS = (n) => {
   if (n == null) return "...";
   const num = Number(n);
   if (Number.isNaN(num)) return String(n);
   return `${Math.round(num).toLocaleString()} UZS`;
 };
+
 const safeTruncate = (str, max = 3500) =>
   str?.length > max ? `${str.slice(0, max)}…` : str || "";
 
@@ -89,7 +123,7 @@ const renderBlocksPreview = (blocks = []) => {
         parts.push(`\n${b.text}`);
         break;
       case "quote":
-        parts.push(`\n“${b.text}”`);
+        parts.push(`\n"${b.text}"`);
         break;
       case "divider":
         parts.push("\n────────────");
@@ -107,18 +141,6 @@ const renderBlocksPreview = (blocks = []) => {
 };
 
 // ---------- UI HELPERS ----------
-const builderKeyboard = () =>
-  Markup.inlineKeyboard([
-    [Markup.button.callback("➕ H1", "BLOG_ADD_H1"), Markup.button.callback("➕ H2", "BLOG_ADD_H2")],
-    [Markup.button.callback("➕ Matn", "BLOG_ADD_P"), Markup.button.callback("➕ Iqtibos", "BLOG_ADD_QUOTE")],
-    [Markup.button.callback("🖼 Rasm", "BLOG_ADD_IMG")],
-    [Markup.button.callback("• Ro'yxat", "BLOG_ADD_UL")],
-    [Markup.button.callback("➖ Oxirgisini o'chirish", "BLOG_REMOVE_LAST")],
-    [Markup.button.callback("👀 Preview", "BLOG_PREVIEW")],
-    [Markup.button.callback("✅ E'lon qilish", "BLOG_PUBLISH")],
-    [Markup.button.callback("🔙 Orqaga", "MENU_BACK")],
-  ]);
-
 const mainMenu = (admin = false) => {
   const buttons = [
     [Markup.button.callback("🛍 Mahsulotlar", "MENU_PRODUCTS")],
@@ -132,30 +154,72 @@ const mainMenu = (admin = false) => {
       [Markup.button.callback("➕ Admin: Mahsulot qo'shish", "ADMIN_ADD_PRODUCT")],
       [Markup.button.callback("✍️ Admin: Blog qo'shish", "ADMIN_ADD_BLOG")],
       [Markup.button.callback("💱 Admin: Kurslarni yangilash", "ADMIN_RATES")],
-      [Markup.button.callback("🔎 Admin: Feedbacklar", "ADMIN_LIST_FEEDBACK")]
+      [Markup.button.callback("🔎 Admin: Feedbacklar", "ADMIN_LIST_FEEDBACK")],
+      [Markup.button.callback("📂 Admin: Kategoriyalar", "ADMIN_CATEGORIES")]
     );
   }
   return Markup.inlineKeyboard(buttons);
 };
 
-// ---------- IMGBB UPLOAD (YAXSHILANGAN) ----------
+const builderKeyboard = () =>
+  Markup.inlineKeyboard([
+    [Markup.button.callback("➕ H1", "BLOG_ADD_H1"), Markup.button.callback("➕ H2", "BLOG_ADD_H2")],
+    [Markup.button.callback("➕ Matn", "BLOG_ADD_P"), Markup.button.callback("➕ Iqtibos", "BLOG_ADD_QUOTE")],
+    [Markup.button.callback("🖼 Rasm", "BLOG_ADD_IMG")],
+    [Markup.button.callback("• Ro'yxat", "BLOG_ADD_UL")],
+    [Markup.button.callback("➖ Oxirgisini o'chirish", "BLOG_REMOVE_LAST")],
+    [Markup.button.callback("👀 Preview", "BLOG_PREVIEW")],
+    [Markup.button.callback("✅ E'lon qilish", "BLOG_PUBLISH")],
+    [Markup.button.callback("🔙 Orqaga", "MENU_BACK")],
+  ]);
+
+const cancelButton = () =>
+  Markup.inlineKeyboard([[Markup.button.callback("❌ Bekor qilish", "CANCEL_ACTION")]]);
+
+const backButton = () =>
+  Markup.inlineKeyboard([[Markup.button.callback("🔙 Orqaga", "MENU_BACK")]]);
+
+const yesNoKeyboard = () =>
+  Markup.inlineKeyboard([
+    [Markup.button.callback("✅ Ha", "YES_ACTION"), Markup.button.callback("❌ Yo'q", "NO_ACTION")]
+  ]);
+
+const getCategoriesKeyboard = async (actionPrefix = "CATEGORY_", includeAddNew = true) => {
+  const categories = await fetchData("categories");
+  const rows = Object.entries(categories).map(([key, name]) => 
+    [Markup.button.callback(name, `${actionPrefix}${key}`)]
+  );
+  
+  if (includeAddNew) {
+    rows.push([Markup.button.callback("➕ Yangi kategoriya qo'shish", "ADD_NEW_CATEGORY")]);
+  }
+  
+  rows.push([Markup.button.callback("🔙 Orqaga", "MENU_BACK")]);
+  return Markup.inlineKeyboard(rows);
+};
+
+const getRatingKeyboard = () =>
+  Markup.inlineKeyboard([
+    [Markup.button.callback("⭐ 1", "RATING_1"), Markup.button.callback("⭐ 2", "RATING_2"), Markup.button.callback("⭐ 3", "RATING_3")],
+    [Markup.button.callback("⭐ 4", "RATING_4"), Markup.button.callback("⭐ 5", "RATING_5")],
+    [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+  ]);
+
+// ---------- IMGBB UPLOAD ----------
 const uploadToImgBB = async (fileId, telegram) => {
   let retryCount = 0;
   const maxRetries = 2;
-  const timeoutMs = 10000; // 10 soniya timeout
+  const timeoutMs = 10000;
 
   while (retryCount <= maxRetries) {
     try {
       console.log(`ImgBB ga rasm yuklash urinishi ${retryCount + 1}/${maxRetries + 1}`);
       
-      // Telegramdan fayl haqida ma'lumot olish
       const fileLink = await telegram.getFileLink(fileId);
       
-      // AbortController bilan timeout qo'shamiz
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-      // Rasmni yuklab olish
       const response = await fetch(fileLink, { signal: controller.signal });
       clearTimeout(timeout);
       
@@ -165,20 +229,17 @@ const uploadToImgBB = async (fileId, telegram) => {
       
       const buffer = await response.buffer();
       
-      // Agar ImgBB API kaliti bo'lmasa, Telegram linkini qaytarish
       if (!process.env.IMGBB_API_KEY) {
         console.warn("IMGBB_API_KEY yo'q. Fallback sifatida Telegram fileLink ishlatiladi.");
         return fileLink.toString();
       }
 
-      // FormData-ni to'g'ri tayyorlash
       const form = new FormData();
       form.append("image", buffer, {
         filename: `image_${Date.now()}.jpg`,
         contentType: 'image/jpeg'
       });
       
-      // ImgBB ga so'rov yuborish (yana bir timeout bilan)
       const uploadController = new AbortController();
       const uploadTimeout = setTimeout(() => uploadController.abort(), timeoutMs);
       
@@ -188,10 +249,21 @@ const uploadToImgBB = async (fileId, telegram) => {
         headers: form.getHeaders(),
         signal: uploadController.signal
       });
-      
+      const getCategoriesKeyboard = async (actionPrefix = "CATEGORY_", includeAddNew = true) => {
+        const categories = await fetchData("categories");
+        const rows = Object.entries(categories).map(([key, name]) => 
+          [Markup.button.callback(name, `${actionPrefix}${key}`)]
+        );
+        
+        if (includeAddNew) {
+          rows.push([Markup.button.callback("➕ Yangi kategoriya qo'shish", "ADD_NEW_CATEGORY")]);
+        }
+        
+        rows.push([Markup.button.callback("🔙 Orqaga", "MENU_BACK")]);
+        return Markup.inlineKeyboard(rows);
+      };
       clearTimeout(uploadTimeout);
       
-      // Javobni tekshirish
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(`ImgBB server xatosi: ${res.status} - ${errorText}`);
@@ -202,7 +274,7 @@ const uploadToImgBB = async (fileId, telegram) => {
       if (data && data.success && data.data && data.data.url) {
         console.log("ImgBB ga rasm muvaffaqiyatli yuklandi");
         return data.data.url;
-      } else {
+  } else {
         throw new Error("ImgBB javobida URL topilmadi");
       }
     } catch (err) {
@@ -210,7 +282,6 @@ const uploadToImgBB = async (fileId, telegram) => {
       console.error(`ImgBB upload xatosi (urinish ${retryCount}):`, err.message);
       
       if (retryCount > maxRetries) {
-        // Fallback - Telegram fayl linkini qaytarish
         try {
           const fallback = await telegram.getFileLink(fileId);
           console.warn("Barcha urinishlar muvaffaqiyatsiz. Telegram linki ishlatilmoqda:", fallback.toString());
@@ -221,7 +292,6 @@ const uploadToImgBB = async (fileId, telegram) => {
         }
       }
       
-      // Keyingi urinish oldin kutish
       await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
     }
   }
@@ -246,11 +316,50 @@ const setCurrentRates = async ({ usd, eur, gold }) => {
   return ok;
 };
 
+// ---------- MESSAGE MANAGEMENT ----------
+const sendAndSaveMessage = async (ctx, text, extra = {}) => {
+  try {
+    const msg = await ctx.reply(text, extra);
+    const session = getSession(ctx.from.id);
+    session.messageIds.push(msg.message_id);
+    return msg;
+  } catch (error) {
+    console.error("Xabar yuborishda xato:", error);
+    return null;
+  }
+};
+
+const editAndSaveMessage = async (ctx, messageId, text, extra = {}) => {
+  try {
+    // Agar messageId bo'lmasa yoki undefined bo'lsa
+    if (!messageId) {
+      return await sendAndSaveMessage(ctx, text, extra);
+    }
+    
+    await ctx.editMessageText(text, { 
+      ...extra,
+      message_id: messageId
+    });
+    return true;
+  } catch (error) {
+    console.error("Xabarni tahrirlashda xato:", error.message);
+    
+    // Agar xabar topilmasa, yangi xabar yuboramiz
+    if (error.response && error.response.error_code === 400 && 
+        error.response.description.includes('message to edit not found')) {
+      await sendAndSaveMessage(ctx, text, extra);
+      return true;
+    }
+    
+    return false;
+  }
+};
 // ---------- START ----------
 bot.start(async (ctx) => {
   const id = ctx.from.id;
   resetSession(id);
-  await ctx.reply(
+  await sendAndSaveMessage(
+    ctx,
     `Salom, ${ctx.from.first_name || "Foydalanuvchi"}! Botga xush kelibsiz.`,
     mainMenu(isAdmin(id))
   );
@@ -282,25 +391,43 @@ bot.on("callback_query", async (ctx) => {
   try {
     await ctx.answerCbQuery();
 
-    // ---------- SHOW PRODUCTS (info) ----------
+    // ---------- CANCEL ACTION ----------
+    if (data === "CANCEL_ACTION") {
+      resetSession(id);
+      await editAndSaveMessage(ctx, ctx.callbackQuery.message.message_id, "Bosh menyu:", mainMenu(isAdmin(id)));
+      return;
+    }
+
+    // ---------- BACK TO MENU ----------
+    if (data === "MENU_BACK") {
+      resetSession(id);
+      try {
+        await ctx.editMessageText("Bosh menyu:", mainMenu(isAdmin(id)));
+      } catch {
+        await sendAndSaveMessage(ctx, "Bosh menyu:", mainMenu(isAdmin(id)));
+      }
+      return;
+    }
+
+    // ---------- SHOW PRODUCTS ----------
     if (data === "MENU_PRODUCTS") {
       const products = await fetchData("products");
       if (!products || Object.keys(products).length === 0)
-        return ctx.reply("Mahsulotlar mavjud emas.");
+        return sendAndSaveMessage(ctx, "Mahsulotlar mavjud emas.", backButton());
 
       const rows = Object.entries(products).map(([key, p]) => {
         const title = `${p.name} (${formatUZS(p.price)})`;
         return [Markup.button.callback(title, `PRODUCT_${key}`)];
       });
       rows.push([Markup.button.callback("🔙 Orqaga", "MENU_BACK")]);
-      return ctx.reply("Mahsulotlar ro'yxati:", Markup.inlineKeyboard(rows));
+      return sendAndSaveMessage(ctx, "Mahsulotlar ro'yxati:", Markup.inlineKeyboard(rows));
     }
 
     // ---------- PURCHASE: show products as BUY buttons ----------
     if (data === "MENU_PURCHASE") {
       const products = await fetchData("products");
       if (!products || Object.keys(products).length === 0)
-        return ctx.reply("Mahsulotlar mavjud emas.");
+        return sendAndSaveMessage(ctx, "Mahsulotlar mavjud emas.", backButton());
 
       const rows = Object.entries(products).map(([key, p]) => {
         const title = `${p.name} (${formatUZS(p.price)})`;
@@ -311,7 +438,8 @@ bot.on("callback_query", async (ctx) => {
       session.type = "purchase";
       session.step = "choose_product";
       session.data = {};
-      return ctx.reply(
+      return sendAndSaveMessage(
+        ctx,
         "Buyurtma berish — mahsulotni tanlang:",
         Markup.inlineKeyboard(rows)
       );
@@ -322,11 +450,9 @@ bot.on("callback_query", async (ctx) => {
       const key = data.replace("PRODUCT_", "");
       const products = await fetchData("products");
       const p = products[key];
-      if (!p) return ctx.reply("Mahsulot topilmadi yoki o'chirilgan.");
+      if (!p) return sendAndSaveMessage(ctx, "Mahsulot topilmadi yoki o'chirilgan.", backButton());
 
-      const caption = `🛒 <b>${p.name}</b>\n\n📄 ${p.description || "Tavsif mavjud emas."}\n💰 Narx: ${formatUZS(
-        p.price
-      )}`;
+      const caption = `🛒 <b>${p.name}</b>\n\n📄 ${p.description || "Tavsif mavjud emas."}\n💰 Narx: ${formatUZS(p.price)}`;
       const buttons = Markup.inlineKeyboard([
         [Markup.button.callback("🧾 Buyurtma berish", `BUY_${key}`)],
         [Markup.button.callback("🔙 Mahsulotlar ro'yxatiga qaytish", "MENU_PRODUCTS")],
@@ -343,7 +469,7 @@ bot.on("callback_query", async (ctx) => {
           // Agar rasm xatosi bo'lsa, matn bilan jo'natamiz
         }
       }
-      return ctx.replyWithHTML(caption, buttons);
+      return sendAndSaveMessage(ctx, caption, buttons);
     }
 
     // ---------- BUY selected product ----------
@@ -351,18 +477,140 @@ bot.on("callback_query", async (ctx) => {
       const key = data.replace("BUY_", "");
       const products = await fetchData("products");
       const p = products[key];
-      if (!p) return ctx.reply("Mahsulot topilmadi yoki o'chirilgan.");
+      if (!p) return sendAndSaveMessage(ctx, "Mahsulot topilmadi yoki o'chirilgan.", backButton());
 
       session.type = "purchase";
-      session.step = "name";
+      session.step = "quantity";
       session.data = {
         productId: key,
         productName: p.name,
         price_each: Number(p.price),
       };
 
-      return ctx.reply(
-        `Siz: ${p.name}\nNarx: ${formatUZS(p.price)}\n\nIltimos, ismingizni kiriting:`
+      const quantityKeyboard = Markup.inlineKeyboard([
+        [Markup.button.callback("1", "QTY_1"), Markup.button.callback("2", "QTY_2"), Markup.button.callback("3", "QTY_3")],
+        [Markup.button.callback("5", "QTY_5"), Markup.button.callback("10", "QTY_10")],
+        [Markup.button.callback("Boshqa son", "QTY_OTHER")],
+        [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+      ]);
+
+      return sendAndSaveMessage(
+        ctx,
+        `Siz: ${p.name}\nNarx: ${formatUZS(p.price)}\n\nMahsulot sonini tanlang:`,
+        quantityKeyboard
+      );
+    }
+
+    // ---------- QUANTITY SELECTION ----------
+    if (data && data.startsWith("QTY_")) {
+      if (session.type !== "purchase") return;
+      
+      if (data === "QTY_OTHER") {
+        session.step = "quantity_other";
+        return sendAndSaveMessage(ctx, "Iltimos, mahsulot sonini kiriting:", cancelButton());
+      }
+      
+      const quantity = parseInt(data.replace("QTY_", ""));
+      session.data.quantity = quantity;
+      session.step = "address";
+      
+      const addressKeyboard = Markup.inlineKeyboard([
+        [Markup.button.callback("Toshkent shahar", "ADDR_TASHKENT")],
+        [Markup.button.callback("Toshkent viloyati", "ADDR_TASHKENT_REGION")],
+        [Markup.button.callback("Boshqa manzil", "ADDR_OTHER")],
+        [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+      ]);
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Mahsulot: ${session.data.productName}\nSoni: ${quantity}\n\nManzilingizni tanlang:`,
+        addressKeyboard
+      );
+    }
+
+    // ---------- ADDRESS SELECTION ----------
+    if (data && data.startsWith("ADDR_")) {
+      if (session.type !== "purchase" || session.step !== "address") return;
+      
+      let address = "";
+      switch (data) {
+        case "ADDR_TASHKENT":
+          address = "Toshkent shahar";
+          break;
+        case "ADDR_TASHKENT_REGION":
+          address = "Toshkent viloyati";
+          break;
+        case "ADDR_OTHER":
+          session.step = "address_other";
+          return sendAndSaveMessage(ctx, "Iltimos, to'liq manzilingizni kiriting:", cancelButton());
+      }
+      
+      session.data.address = address;
+      session.step = "phone";
+      
+      const phoneKeyboard = Markup.inlineKeyboard([
+        [Markup.button.callback("📞 Telefon raqamim", "PHONE_MY")],
+        [Markup.button.callback("Boshqa raqam", "PHONE_OTHER")],
+        [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+      ]);
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Manzil: ${address}\n\nTelefon raqamingizni tanlang yoki kiriting:`,
+        phoneKeyboard
+      );
+    }
+
+    // ---------- PHONE SELECTION ----------
+    if (data && data.startsWith("PHONE_")) {
+      if (session.type !== "purchase" || session.step !== "phone") return;
+      
+      if (data === "PHONE_MY") {
+        session.data.phone = ctx.from.phone_number || "";
+        if (!session.data.phone) {
+          return sendAndSaveMessage(ctx, "Telefon raqamingiz topilmadi. Iltimos, boshqa raqam kiriting:", cancelButton());
+        }
+      } else if (data === "PHONE_OTHER") {
+        session.step = "phone_other";
+        return sendAndSaveMessage(ctx, "Iltimos, telefon raqamingizni kiriting (+998XXXXXXXXX):", cancelButton());
+      }
+      
+      // Final confirmation
+      const priceEach = Number(session.data.price_each || 0);
+      const qty = Number(session.data.quantity || 0);
+      const total = priceEach * qty;
+      session.data.total = total;
+      
+      const summary =
+        `✅ Yangi buyurtma (tasdiqlash uchun chek yuboring)\n\n` +
+        `Mahsulot: ${session.data.productName}\n` +
+        `Soni: ${qty}\n` +
+        `Narx (bir dona): ${formatUZS(priceEach)}\n` +
+        `Umumiy: ${formatUZS(total)}\n` +
+        `Ism: ${ctx.from.first_name || ""} ${ctx.from.last_name || ""}\n` +
+        `Telefon: ${session.data.phone}\n` +
+        `Manzil: ${session.data.address}\n` +
+        `Telegram: ${ctx.from.username ? `@${ctx.from.username}` : "—"}`;
+      
+      const buttons = Markup.inlineKeyboard([
+        [Markup.button.callback("✅ Men to'lov qildim — Chek yuborish", "UPLOAD_RECEIPT")],
+        [Markup.button.callback("❌ Bekor qilish", "CANCEL_ACTION")],
+      ]);
+      
+      session.step = "awaiting_confirm_receipt";
+      return sendAndSaveMessage(ctx, summary, buttons);
+    }
+
+    // ---------- USER CONFIRMS PAYMENT & READY TO UPLOAD RECEIPT ----------
+    if (data === "UPLOAD_RECEIPT") {
+      if (session.type !== "purchase") {
+        return sendAndSaveMessage(ctx, "Hech qanday buyurtma topilmadi. Yangi buyurtma bering.", mainMenu(isAdmin(id)));
+      }
+      session.step = "await_receipt";
+      return sendAndSaveMessage(
+        ctx,
+        "Iltimos, to'lov chekini rasm (photo) sifatida yuboring. (Yuborishdan avval qayta tekshiring.)",
+        cancelButton()
       );
     }
 
@@ -370,7 +618,7 @@ bot.on("callback_query", async (ctx) => {
     if (data === "MENU_BLOGS") {
       const blogs = await fetchData("blogs");
       if (!blogs || Object.keys(blogs).length === 0)
-        return ctx.reply("Bloglar hali qo'shilmagan.");
+        return sendAndSaveMessage(ctx, "Bloglar hali qo'shilmagan.", backButton());
 
       const sorted = Object.entries(blogs)
         .map(([key, v]) => ({ key, ...(v || {}) }))
@@ -381,15 +629,15 @@ bot.on("callback_query", async (ctx) => {
         Markup.button.callback(b.title || "(sarlavhasiz)", `BLOGVIEW_${b.key}`),
       ]);
       rows.push([Markup.button.callback("🔙 Orqaga", "MENU_BACK")]);
-      return ctx.reply("Bloglar ro'yxati:", Markup.inlineKeyboard(rows));
+      return sendAndSaveMessage(ctx, "Bloglar ro'yxati:", Markup.inlineKeyboard(rows));
     }
 
-    // ---------- BLOG DETAILS (separate safe prefix) ----------
+    // ---------- BLOG DETAILS ----------
     if (data && data.startsWith("BLOGVIEW_")) {
       const key = data.replace("BLOGVIEW_", "");
       const blogs = await fetchData("blogs");
       const b = blogs[key];
-      if (!b) return ctx.reply("Blog topilmadi yoki o'chirilgan.");
+      if (!b) return sendAndSaveMessage(ctx, "Blog topilmadi yoki o'chirilgan.", backButton());
 
       const header = `<b>${b.title || "(Sarlavha yo'q)"}</b>`;
       const meta = `\nKategoriya: ${b.category || "—"} | ⏱ ${b.read_time || "—"} min`;
@@ -404,88 +652,268 @@ bot.on("callback_query", async (ctx) => {
             parse_mode: "HTML",
           });
         } catch {
-          await ctx.replyWithHTML(text);
+          await sendAndSaveMessage(ctx, text);
         }
       } else {
-        await ctx.replyWithHTML(text);
+        await sendAndSaveMessage(ctx, text);
       }
       return;
+      
     }
+    // ---------- ADMIN CATEGORY SELECTION ----------
+if (data && data.startsWith("ADMIN_CAT_")) {
+  if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+  
+  const categoryId = data.replace("ADMIN_CAT_", "");
+  const categories = await fetchData("categories");
+  const categoryName = categories[categoryId];
+  
+  if (!categoryName) return sendAndSaveMessage(ctx, "Kategoriya topilmadi.", backButton());
+  
+  session.type = "admin_category_action";
+  session.step = "action";
+  session.data.categoryId = categoryId;
+  session.data.categoryName = categoryName;
+  
+  return sendAndSaveMessage(
+    ctx,
+    `Kategoriya: ${categoryName}\n\nNima qilmoqchisiz?`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback("✏️ Nomini o'zgartirish", `EDIT_CAT_${categoryId}`)],
+      [Markup.button.callback("🗑 O'chirish", `DELETE_CAT_${categoryId}`)],
+      [Markup.button.callback("🔙 Orqaga", "ADMIN_CATEGORIES")]
+    ])
+  );
+}
+// ---------- CATEGORY SELECTION (PRODUCT) ----------
+if (data && data.startsWith("PROD_CAT_")) {
+  if (session.type === "admin_product" && session.step === "category") {
+    const categoryId = data.replace("PROD_CAT_", "");
+    const categories = await fetchData("categories");
+    const categoryName = categories[categoryId];
+    
+    if (categoryName) {
+      session.data.category = categoryName;
+      session.step = "description";
+      return sendAndSaveMessage(ctx, "Mahsulot tavsifini kiriting:", cancelButton());
+    }
+  }
+}
 
+// ---------- CATEGORY SELECTION (BLOG) ----------
+if (data && data.startsWith("BLOG_CAT_")) {
+  if (session.type === "admin_blog" && session.step === "category") {
+    const categoryId = data.replace("BLOG_CAT_", "");
+    const categories = await fetchData("categories");
+    const categoryName = categories[categoryId];
+    
+    if (categoryName) {
+      session.data.category = categoryName;
+      session.step = "read_time";
+      return sendAndSaveMessage(ctx, "O'qish vaqti (minutlarda):", cancelButton());
+    }
+  }
+}
     // ---------- RATES (PUBLIC VIEW) ----------
     if (data === "MENU_RATES") {
       const { usd, eur, gold, updatedAt } = await getCurrentRates();
       const updated = updatedAt ? new Date(updatedAt).toLocaleString("uz-UZ") : "—";
-      return ctx.reply(
-        `💱 Bugungi kurslar:\n\n$ 1 USD = ${formatUZS(usd)}\n€ 1 EUR = ${formatUZS(
-          eur
-        )}\n🪙 1g OLTIN = ${formatUZS(gold)}\n\nYangilangan: ${updated}`,
-        Markup.inlineKeyboard([[Markup.button.callback("🔙 Orqaga", "MENU_BACK")]])
+      return sendAndSaveMessage(
+        ctx,
+        `💱 Bugungi kurslar:\n\n$ 1 USD = ${formatUZS(usd)}\n€ 1 EUR = ${formatUZS(eur)}\n🪙 1g OLTIN = ${formatUZS(gold)}\n\nYangilangan: ${updated}`,
+        backButton()
       );
     }
 
     // ---------- FEEDBACK START ----------
     if (data === "MENU_FEEDBACK") {
       session.type = "feedback";
-      session.step = "name";
-      session.data = {};
-      return ctx.reply("Ismingizni kiriting (yoki 'cancel' bilan bekor qiling):");
-    }
-
-    // ---------- BACK ----------
-    if (data === "MENU_BACK") {
-      try {
-        await ctx.editMessageText("Bosh menyu:", mainMenu(isAdmin(id)));
-      } catch {
-        await ctx.reply("Bosh menyu:", mainMenu(isAdmin(id)));
-      }
-      return;
-    }
-
-    // ---------- CANCEL PURCHASE ----------
-    if (data === "CANCEL_PURCHASE") {
-      resetSession(id);
-      return ctx.reply("Buyurtma bekor qilindi.", mainMenu(isAdmin(id)));
-    }
-
-    // ---------- USER CONFIRMS PAYMENT & READY TO UPLOAD RECEIPT ----------
-    if (data === "UPLOAD_RECEIPT") {
-      if (session.type !== "purchase") {
-        return ctx.reply(
-          "Hech qanday buyurtma topilmadi. Yangi buyurtma bering.",
-          mainMenu(isAdmin(id))
-        );
-      }
-      session.step = "await_receipt";
-      return ctx.reply(
-        "Iltimos, to'lov chekini rasm (photo) sifatida yuboring. (Yuborishdan avval qayta tekshiring.)"
+      session.step = "rating";
+      session.data = {
+        name: `${ctx.from.first_name || ""} ${ctx.from.last_name || ""}`.trim()
+      };
+      return sendAndSaveMessage(
+        ctx,
+        "Iltimos, bahoingizni tanlang:",
+        getRatingKeyboard()
       );
+    }
+
+    // ---------- RATING SELECTION ----------
+    if (data && data.startsWith("RATING_")) {
+      if (session.type !== "feedback") return;
+      
+      const rating = parseInt(data.replace("RATING_", ""));
+      session.data.rating = rating;
+      session.step = "text";
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Bahoyingiz: ${rating} ⭐\n\nSharhingizni kiriting yoki "O'tkazish" tugmasini bosing:`,
+        Markup.inlineKeyboard([
+          [Markup.button.callback("📝 Matnli sharh", "FEEDBACK_TEXT")],
+          [Markup.button.callback("➡️ O'tkazish", "FEEDBACK_SKIP")],
+          [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+        ])
+      );
+    }
+
+    // ---------- FEEDBACK TEXT OPTIONS ----------
+    if (data === "FEEDBACK_TEXT") {
+      if (session.type !== "feedback") return;
+      
+      session.step = "text_input";
+      return sendAndSaveMessage(
+        ctx,
+        "Iltimos, sharhingizni matn shaklida kiriting:",
+        cancelButton()
+      );
+    }
+
+    if (data === "FEEDBACK_SKIP") {
+      if (session.type !== "feedback") return;
+      
+      await pushData("feedback", {
+        name: session.data.name,
+        rating: session.data.rating,
+        text: "",
+        createdAt: Date.now(),
+      });
+      
+      sendAndSaveMessage(ctx, "✅ Feedback qabul qilindi. Rahmat!", mainMenu(isAdmin(id)));
+      resetSession(id);
+      return;
     }
 
     // ---------- ADMIN ACTIONS ----------
     if (data === "ADMIN_ADD_PRODUCT") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       session.type = "admin_product";
       session.step = "name";
       session.data = {};
-      return ctx.reply("Mahsulot nomini kiriting (yoki 'cancel' bilan bekor qilish):");
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Mahsulot nomini kiriting:",
+        cancelButton()
+      );
+    }
+
+    // ---------- ADMIN CATEGORIES MANAGEMENT ----------
+    if (data === "ADMIN_CATEGORIES") {
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Kategoriyalarni boshqarish:",
+        await getCategoriesKeyboard("ADMIN_CAT_", true)
+      );
+    }
+
+    if (data === "ADD_NEW_CATEGORY") {
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
+      session.type = "admin_category";
+      session.step = "name";
+      session.data = {};
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Yangi kategoriya nomini kiriting:",
+        cancelButton()
+      );
+    }
+
+    if (data && data.startsWith("ADMIN_CAT_")) {
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
+      const categoryId = data.replace("ADMIN_CAT_", "");
+      const categories = await fetchData("categories");
+      const categoryName = categories[categoryId];
+      
+      if (!categoryName) return sendAndSaveMessage(ctx, "Kategoriya topilmadi.", backButton());
+      
+      session.type = "admin_category_action";
+      session.step = "action";
+      session.data.categoryId = categoryId;
+      session.data.categoryName = categoryName;
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Kategoriya: ${categoryName}\n\nNima qilmoqchisiz?`,
+        Markup.inlineKeyboard([
+          [Markup.button.callback("✏️ Nomini o'zgartirish", `EDIT_CAT_${categoryId}`)],
+          [Markup.button.callback("🗑 O'chirish", `DELETE_CAT_${categoryId}`)],
+          [Markup.button.callback("🔙 Orqaga", "ADMIN_CATEGORIES")]
+        ])
+      );
+    }
+
+    if (data && data.startsWith("EDIT_CAT_")) {
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
+      const categoryId = data.replace("EDIT_CAT_", "");
+      const categories = await fetchData("categories");
+      const categoryName = categories[categoryId];
+      
+      if (!categoryName) return sendAndSaveMessage(ctx, "Kategoriya topilmadi.", backButton());
+      
+      session.type = "admin_category";
+      session.step = "edit_name";
+      session.data.categoryId = categoryId;
+      session.data.oldName = categoryName;
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Kategoriya: ${categoryName}\n\nYangi nomini kiriting:`,
+        cancelButton()
+      );
+    }
+
+    if (data && data.startsWith("DELETE_CAT_")) {
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
+      const categoryId = data.replace("DELETE_CAT_", "");
+      const categories = await fetchData("categories");
+      const categoryName = categories[categoryId];
+      
+      if (!categoryName) return sendAndSaveMessage(ctx, "Kategoriya topilmadi.", backButton());
+      
+      session.type = "admin_category";
+      session.step = "confirm_delete";
+      session.data.categoryId = categoryId;
+      session.data.categoryName = categoryName;
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Kategoriya: ${categoryName}\n\nRostan ham o'chirmoqchimisiz?`,
+        yesNoKeyboard()
+      );
     }
 
     // ----- ADMIN BLOG: start enhanced flow -----
     if (data === "ADMIN_ADD_BLOG") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       session.type = "admin_blog";
       session.step = "title";
       session.data = { blocks: [] };
-      return ctx.reply("Blog sarlavhasini kiriting (yoki 'cancel' bilan bekor qilish):");
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Blog sarlavhasini kiriting:",
+        cancelButton()
+      );
     }
 
     // ----- ADMIN LIST FEEDBACK -----
     if (data === "ADMIN_LIST_FEEDBACK") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       const feedbacks = await fetchData("feedback");
       if (!feedbacks || Object.keys(feedbacks).length === 0)
-        return ctx.reply("Feedbacklar mavjud emas.");
+        return sendAndSaveMessage(ctx, "Feedbacklar mavjud emas.", backButton());
 
       const text = safeTruncate(
         Object.values(feedbacks)
@@ -493,17 +921,20 @@ bot.on("callback_query", async (ctx) => {
           .join("\n\n"),
         3800
       );
-      return ctx.reply(text);
+      return sendAndSaveMessage(ctx, text, backButton());
     }
 
     // ----- ADMIN RATES MENU -----
     if (data === "ADMIN_RATES") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       const { usd, eur, gold, updatedAt } = await getCurrentRates();
       const updated = updatedAt ? new Date(updatedAt).toLocaleString("uz-UZ") : "—";
+      
       session.type = "admin_rates";
       session.step = null;
       session.data = {};
+      
       const kb = Markup.inlineKeyboard([
         [Markup.button.callback("✏️ USD ni kiritish", "ADMIN_RATES_SET_USD")],
         [Markup.button.callback("✏️ EUR ni kiritish", "ADMIN_RATES_SET_EUR")],
@@ -511,58 +942,82 @@ bot.on("callback_query", async (ctx) => {
         [Markup.button.callback("✅ Saqlash", "ADMIN_RATES_SAVE")],
         [Markup.button.callback("🔙 Orqaga", "MENU_BACK")],
       ]);
-      return ctx.reply(
-        `Hozirgi kurslar:\n\n$ USD: ${formatUZS(usd)}\n€ EUR: ${formatUZS(
-          eur
-        )}\n🪙 OLTIN (1g): ${formatUZS(gold)}\n\nYangilangan: ${updated}\n\nYangi qiymatlarni kiriting yoki darhol "Saqlash" bosing.`,
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Hozirgi kurslar:\n\n$ USD: ${formatUZS(usd)}\n€ EUR: ${formatUZS(eur)}\n🪙 OLTIN (1g): ${formatUZS(gold)}\n\nYangilangan: ${updated}\n\nYangi qiymatlarni kiriting yoki darhol "Saqlash" bosing.`,
         kb
       );
     }
 
     if (data === "ADMIN_RATES_SET_USD") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       session.type = "admin_rates";
       session.step = "usd";
-      return ctx.reply("USD kursini kiriting (UZS, faqat son):");
+      
+      return sendAndSaveMessage(
+        ctx,
+        "USD kursini kiriting (UZS, faqat son):",
+        cancelButton()
+      );
     }
+    
     if (data === "ADMIN_RATES_SET_EUR") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       session.type = "admin_rates";
       session.step = "eur";
-      return ctx.reply("EUR kursini kiriting (UZS, faqat son):");
+      
+      return sendAndSaveMessage(
+        ctx,
+        "EUR kursini kiriting (UZS, faqat son):",
+        cancelButton()
+      );
     }
+    
     if (data === "ADMIN_RATES_SET_GOLD") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       session.type = "admin_rates";
       session.step = "gold";
-      return ctx.reply("1 gram OLTIN narxini kiriting (UZS, faqat son):");
+      
+      return sendAndSaveMessage(
+        ctx,
+        "1 gram OLTIN narxini kiriting (UZS, faqat son):",
+        cancelButton()
+      );
     }
+    
     if (data === "ADMIN_RATES_SAVE") {
-      if (!isAdmin(id)) return ctx.reply("Siz admin emassiz.");
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
       const { usd, eur, gold } = session.data;
       if (usd == null && eur == null && gold == null) {
-        return ctx.reply(
+        return sendAndSaveMessage(
+          ctx,
           "Hech qanday yangi kurs kiritilmadi. Avval qiymat kiriting yoki orqaga chiqing.",
           mainMenu(true)
         );
       }
+      
       const { usd: curU, eur: curE, gold: curG } = await getCurrentRates();
       const payload = {
         usd: usd ?? curU ?? null,
         eur: eur ?? curE ?? null,
         gold: gold ?? curG ?? null,
       };
+      
       const ok = await setCurrentRates(payload);
       if (ok) {
         resetSession(id);
-        return ctx.reply(
-          `✅ Kurslar yangilandi:\n\n$ USD: ${formatUZS(payload.usd)}\n€ EUR: ${formatUZS(
-            payload.eur
-          )}\n🪙 OLTIN (1g): ${formatUZS(payload.gold)}`,
+        return sendAndSaveMessage(
+          ctx,
+          `✅ Kurslar yangilandi:\n\n$ USD: ${formatUZS(payload.usd)}\n€ EUR: ${formatUZS(payload.eur)}\n🪙 OLTIN (1g): ${formatUZS(payload.gold)}`,
           mainMenu(true)
         );
       } else {
-        return ctx.reply("Xatolik: Kurslarni saqlab bo'lmadi.");
+        return sendAndSaveMessage(ctx, "Xatolik: Kurslarni saqlab bo'lmadi.", backButton());
       }
     }
 
@@ -574,52 +1029,88 @@ bot.on("callback_query", async (ctx) => {
       data === "BLOG_ADD_QUOTE"
     ) {
       if (session.type !== "admin_blog") return;
+      
       const map = {
         BLOG_ADD_H1: "h1",
         BLOG_ADD_H2: "h2",
         BLOG_ADD_P: "p",
         BLOG_ADD_QUOTE: "quote",
       };
+      
       session.step = "await_block_text";
       session.data.pendingBlockType = map[data];
-      return ctx.reply(`Matnni kiriting (${map[data].toUpperCase()}):`);
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Matnni kiriting (${map[data].toUpperCase()}):`,
+        cancelButton()
+      );
     }
 
     if (data === "BLOG_ADD_UL") {
       if (session.type !== "admin_blog") return;
+      
       session.step = "await_block_ul";
-      return ctx.reply(
-        "Ro'yxat elementlarini yuboring (har bir satr — alohida element). Tugatgach 'done' deb yozing:"
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Ro'yxat elementlarini yuboring (har bir satr — alohida element). Tugatgach 'done' deb yozing:",
+        cancelButton()
       );
     }
 
     if (data === "BLOG_ADD_IMG") {
       if (session.type !== "admin_blog") return;
+      
       session.step = "await_block_image";
-      return ctx.reply("Rasmni PHOTO sifatida yuboring (keyin ixtiyoriy sarlavha/izoh berasiz).");
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Rasmni PHOTO sifatida yuboring (keyin ixtiyoriy sarlavha/izoh berasiz).",
+        cancelButton()
+      );
     }
 
     if (data === "BLOG_REMOVE_LAST") {
       if (session.type !== "admin_blog") return;
+      
       const blocks = session.data.blocks || [];
-      if (!blocks.length) return ctx.reply("O'chirish uchun blok yo'q.");
+      if (!blocks.length) return sendAndSaveMessage(ctx, "O'chirish uchun blok yo'q.", builderKeyboard());
+      
       const removed = blocks.pop();
       session.data.blocks = blocks;
-      return ctx.reply(`Oxirgi blok o'chirildi: ${removed.type}`);
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Oxirgi blok o'chirildi: ${removed.type}`,
+        builderKeyboard()
+      );
     }
 
     if (data === "BLOG_PREVIEW") {
       if (session.type !== "admin_blog") return;
+      
       const preview = renderBlocksPreview(session.data.blocks || []);
-      return ctx.replyWithHTML(`👀 <b>Preview</b>\n${preview}`);
+      
+      return sendAndSaveMessage(
+        ctx,
+        `👀 <b>Preview</b>\n${preview}`,
+        builderKeyboard()
+      );
     }
 
     if (data === "BLOG_PUBLISH") {
       if (session.type !== "admin_blog") return;
+      
       const d = session.data || {};
       if (!d.title || !d.description || !d.read_time) {
-        return ctx.reply("Iltimos, sarlavha, tavsif va o'qish vaqtini kiriting.");
+        return sendAndSaveMessage(
+          ctx,
+          "Iltimos, sarlavha, tavsif va o'qish vaqtini kiriting.",
+          builderKeyboard()
+        );
       }
+      
       const payload = {
         title: d.title,
         category: d.category || null,
@@ -630,20 +1121,59 @@ bot.on("callback_query", async (ctx) => {
         author: d.author || null,
         createdAt: Date.now(),
       };
+      
       const res = await pushData("blogs", payload);
       if (res.ok) {
         resetSession(id);
-        return ctx.reply(`✅ Blog saqlandi. ID: ${res.key}`, mainMenu(isAdmin(id)));
+        return sendAndSaveMessage(
+          ctx,
+          `✅ Blog saqlandi. ID: ${res.key}`,
+          mainMenu(isAdmin(id))
+        );
       } else {
-        return ctx.reply("Xatolik: blogni saqlab bo'lmadi.");
+        return sendAndSaveMessage(
+          ctx,
+          "Xatolik: blogni saqlab bo'lmadi.",
+          builderKeyboard()
+        );
+      }
+    }
+
+    // ---------- YES/NO ACTIONS ----------
+    if (data === "YES_ACTION") {
+      if (session.type === "admin_category" && session.step === "confirm_delete") {
+        const { categoryId } = session.data;
+        
+        // Kategoriyani o'chirish
+        await setData(`categories/${categoryId}`, null);
+        
+        sendAndSaveMessage(
+          ctx,
+          "✅ Kategoriya muvaffaqiyatli o'chirildi.",
+          await getCategoriesKeyboard("ADMIN_CAT_", true)
+        );
+        resetSession(id);
+        return;
+      }
+    }
+
+    if (data === "NO_ACTION") {
+      if (session.type === "admin_category" && session.step === "confirm_delete") {
+        sendAndSaveMessage(
+          ctx,
+          "Kategoriya o'chirilmadi.",
+          await getCategoriesKeyboard("ADMIN_CAT_", true)
+        );
+        resetSession(id);
+        return;
       }
     }
 
     // ---------- DEFAULT ----------
-    return ctx.reply("Noma'lum tugma bosildi.");
+    return sendAndSaveMessage(ctx, "Noma'lum tugma bosildi.", backButton());
   } catch (err) {
     console.error("callback_query xatosi:", err);
-    ctx.reply("Xatolik yuz berdi. Iltimos qayta urinib ko'ring.");
+    sendAndSaveMessage(ctx, "Xatolik yuz berdi. Iltimos qayta urinib ko'ring.", backButton());
   }
 });
 
@@ -653,94 +1183,174 @@ bot.on("text", async (ctx) => {
   const txtRaw = ctx.message.text || "";
   const txt = txtRaw.trim();
   const session = getSession(id);
-
-  // Cancel session
-  if (txt.toLowerCase() === "cancel") {
-    resetSession(id);
-    return ctx.reply("Sessiya bekor qilindi.", mainMenu(isAdmin(id)));
+// ---------- CATEGORY SELECTION (PRODUCT) ----------
+if (session.type === "admin_product" && session.step === "category" && txt.startsWith("PROD_CAT_")) {
+  const categoryId = txt.replace("PROD_CAT_", "");
+  const categories = await fetchData("categories");
+  const categoryName = categories[categoryId];
+  
+  if (categoryName) {
+    session.data.category = categoryName;
+    session.step = "description";
+    return sendAndSaveMessage(ctx, "Mahsulot tavsifini kiriting:", cancelButton());
   }
+}
 
+// ---------- CATEGORY SELECTION (BLOG) ----------
+if (session.type === "admin_blog" && session.step === "category" && txt.startsWith("BLOG_CAT_")) {
+  const categoryId = txt.replace("BLOG_CAT_", "");
+  const categories = await fetchData("categories");
+  const categoryName = categories[categoryId];
+  
+  if (categoryName) {
+    session.data.category = categoryName;
+    session.step = "read_time";
+    return sendAndSaveMessage(ctx, "O'qish vaqti (minutlarda):", cancelButton());
+  }
+}
+
+// ---------- CATEGORY SELECTION (ADMIN) ----------
+if (txt.startsWith("ADMIN_CAT_")) {
+  if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+  
+  const categoryId = txt.replace("ADMIN_CAT_", "");
+  const categories = await fetchData("categories");
+  const categoryName = categories[categoryId];
+  
+  if (!categoryName) return sendAndSaveMessage(ctx, "Kategoriya topilmadi.", backButton());
+  
+  session.type = "admin_category_action";
+  session.step = "action";
+  session.data.categoryId = categoryId;
+  session.data.categoryName = categoryName;
+  
+  return sendAndSaveMessage(
+    ctx,
+    `Kategoriya: ${categoryName}\n\nNima qilmoqchisiz?`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback("✏️ Nomini o'zgartirish", `EDIT_CAT_${categoryId}`)],
+      [Markup.button.callback("🗑 O'chirish", `DELETE_CAT_${categoryId}`)],
+      [Markup.button.callback("🔙 Orqaga", "ADMIN_CATEGORIES")]
+    ])
+  );
+}
   try {
+    // ---------- ADMIN CATEGORY FLOW ----------
+    if (session.type === "admin_category") {
+      switch (session.step) {
+        case "name":
+          // Yangi kategoriya qo'shish
+          const newCategoryId = `cat_${Date.now()}`;
+          await setData(`categories/${newCategoryId}`, txt);
+          
+          sendAndSaveMessage(
+            ctx,
+            `✅ "${txt}" kategoriyasi qo'shildi.`,
+            await getCategoriesKeyboard("ADMIN_CAT_", true)
+          );
+          resetSession(id);
+          return;
+          
+        case "edit_name":
+          // Kategoriya nomini o'zgartirish
+          const { categoryId } = session.data;
+          await setData(`categories/${categoryId}`, txt);
+          
+          sendAndSaveMessage(
+            ctx,
+            `✅ Kategoriya nomi "${session.data.oldName}" dan "${txt}" ga o'zgartirildi.`,
+            await getCategoriesKeyboard("ADMIN_CAT_", true)
+          );
+          resetSession(id);
+          return;
+      }
+    }
+
     // ---------- PURCHASE FLOW ----------
     if (session.type === "purchase") {
       switch (session.step) {
-        case "name":
-          session.data.name = txt;
-          session.step = "quantity";
-          return ctx.reply("Soni kiriting:");
-        case "quantity": {
+        case "quantity_other": {
           const n = Number(txt.replace(/\s+/g, ""));
-          if (Number.isNaN(n) || n <= 0) return ctx.reply("Iltimos, to'g'ri son kiriting.");
+          if (Number.isNaN(n) || n <= 0) {
+            return sendAndSaveMessage(ctx, "Iltimos, to'g'ri son kiriting:", cancelButton());
+          }
+          
           session.data.quantity = n;
           session.step = "address";
-          return ctx.reply("Manzilni kiriting (ko'cha, bino, shahar):");
+          
+          const addressKeyboard = Markup.inlineKeyboard([
+            [Markup.button.callback("Toshkent shahar", "ADDR_TASHKENT")],
+            [Markup.button.callback("Toshkent viloyati", "ADDR_TASHKENT_REGION")],
+            [Markup.button.callback("Boshqa manzil", "ADDR_OTHER")],
+            [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+          ]);
+          
+          return sendAndSaveMessage(
+            ctx,
+            `Mahsulot: ${session.data.productName}\nSoni: ${n}\n\nManzilingizni tanlang:`,
+            addressKeyboard
+          );
         }
-        case "address":
+        
+        case "address_other":
           session.data.address = txt;
           session.step = "phone";
-          return ctx.reply("Telefon raqamingizni kiriting (masalan: +998901234567):");
-        case "phone": {
+          
+          const phoneKeyboard = Markup.inlineKeyboard([
+            [Markup.button.callback("📞 Telefon raqamim", "PHONE_MY")],
+            [Markup.button.callback("Boshqa raqam", "PHONE_OTHER")],
+            [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+          ]);
+          
+          return sendAndSaveMessage(
+            ctx,
+            `Manzil: ${txt}\n\nTelefon raqamingizni tanlang yoki kiriting:`,
+            phoneKeyboard
+          );
+          
+        case "phone_other":
           session.data.phone = txt;
-          session.data.telegram = ctx.from.username ? `@${ctx.from.username}` : null;
-
+          
+          // Final confirmation
           const priceEach = Number(session.data.price_each || 0);
           const qty = Number(session.data.quantity || 0);
           const total = priceEach * qty;
           session.data.total = total;
-
+          
           const summary =
             `✅ Yangi buyurtma (tasdiqlash uchun chek yuboring)\n\n` +
             `Mahsulot: ${session.data.productName}\n` +
             `Soni: ${qty}\n` +
             `Narx (bir dona): ${formatUZS(priceEach)}\n` +
             `Umumiy: ${formatUZS(total)}\n` +
-            `Ism: ${session.data.name}\n` +
-            `Telefon: ${session.data.phone}\n` +
+            `Ism: ${ctx.from.first_name || ""} ${ctx.from.last_name || ""}\n` +
+            `Telefon: ${txt}\n` +
             `Manzil: ${session.data.address}\n` +
-            `Telegram: ${session.data.telegram || "—"}`;
-
+            `Telegram: ${ctx.from.username ? `@${ctx.from.username}` : "—"}`;
+          
           const buttons = Markup.inlineKeyboard([
             [Markup.button.callback("✅ Men to'lov qildim — Chek yuborish", "UPLOAD_RECEIPT")],
-            [Markup.button.callback("❌ Bekor qilish", "CANCEL_PURCHASE")],
+            [Markup.button.callback("❌ Bekor qilish", "CANCEL_ACTION")],
           ]);
-
+          
           session.step = "awaiting_confirm_receipt";
-          return ctx.reply(summary, buttons);
-        }
-        default:
-          return ctx.reply("Iltimos menyudan tanlang yoki /start ni bosing.", mainMenu(isAdmin(id)));
+          return sendAndSaveMessage(ctx, summary, buttons);
       }
     }
 
     // ---------- FEEDBACK FLOW ----------
     if (session.type === "feedback") {
-      switch (session.step) {
-        case "name":
-          session.data.name = txt;
-          session.step = "surname";
-          return ctx.reply("Familiyangizni kiriting:");
-        case "surname":
-          session.data.surname = txt;
-          session.step = "rating";
-          return ctx.reply("Bahoni kiriting (1-5):");
-        case "rating": {
-          const n = Number(txt);
-          if (Number.isNaN(n) || n < 1 || n > 5) return ctx.reply("Iltimos 1 dan 5 gacha son kiriting.");
-          session.data.rating = n;
-          session.step = "text";
-          return ctx.reply("Sharhingizni kiriting:");
-        }
-        case "text":
-          session.data.text = txt;
-          await pushData("feedback", {
-            name: `${(session.data.name || "")} ${(session.data.surname || "")}`.trim(),
-            rating: session.data.rating,
-            text: session.data.text,
-            createdAt: Date.now(),
-          });
-          ctx.reply("✅ Feedback qabul qilindi. Rahmat!", mainMenu(isAdmin(id)));
-          resetSession(id);
-          return;
+      if (session.step === "text_input") {
+        await pushData("feedback", {
+          name: session.data.name,
+          rating: session.data.rating,
+          text: txt,
+          createdAt: Date.now(),
+        });
+        
+        sendAndSaveMessage(ctx, "✅ Feedback qabul qilindi. Rahmat!", mainMenu(isAdmin(id)));
+        resetSession(id);
+        return;
       }
     }
 
@@ -750,95 +1360,128 @@ bot.on("text", async (ctx) => {
         case "name":
           session.data.name = txt;
           session.step = "price";
-          return ctx.reply("Mahsulot narxini kiriting (raqam, UZS):");
+          return sendAndSaveMessage(ctx, "Mahsulot narxini kiriting (raqam, UZS):", cancelButton());
+          
         case "price": {
           const price = Number(txt.replace(/\s+/g, ""));
-          if (Number.isNaN(price) || price <= 0) return ctx.reply("To'g'ri narx kiriting.");
+          if (Number.isNaN(price) || price <= 0) {
+            return sendAndSaveMessage(ctx, "To'g'ri narx kiriting:", cancelButton());
+          }
+          
           session.data.price = price;
-          session.step = "description";
-          return ctx.reply("Mahsulot tavsifini kiriting:");
+          session.step = "category";
+          
+          return sendAndSaveMessage(
+            ctx,
+            "Mahsulot kategoriyasini tanlang:",
+            await getCategoriesKeyboard("PROD_CAT_", false)
+          );
         }
+        
         case "description":
           session.data.description = txt;
           session.step = "photo";
-          return ctx.reply("Mahsulot rasmini yuboring (photo):");
+          return sendAndSaveMessage(ctx, "Mahsulot rasmini yuboring (photo):", cancelButton());
       }
     }
 
-    // ---------- ADMIN BLOG FLOW (enhanced) ----------
+    // ---------- ADMIN BLOG FLOW ----------
     if (session.type === "admin_blog") {
       switch (session.step) {
         case "title":
           session.data.title = txt;
           session.step = "category";
-          return ctx.reply("Kategoriya kiriting (masalan: Maslahat, Foydali, O'yin):");
-        case "category":
-          session.data.category = txt;
-          session.step = "read_time";
-          return ctx.reply("O'qish vaqti (minutlarda):");
+          
+          return sendAndSaveMessage(
+            ctx,
+            "Blog kategoriyasini tanlang:",
+            await getCategoriesKeyboard("BLOG_CAT_", false)
+          );
+          
         case "read_time": {
           const n = parseNumber(txt);
-          if (n == null || n <= 0) return ctx.reply("Raqam kiriting (minut).");
+          if (n == null || n <= 0) {
+            return sendAndSaveMessage(ctx, "Raqam kiriting (minut).", cancelButton());
+          }
+          
           session.data.read_time = n;
           session.step = "description";
-          return ctx.reply("Qisqa tavsif (description) kiriting:");
+          return sendAndSaveMessage(ctx, "Qisqa tavsif (description) kiriting:", cancelButton());
         }
+        
         case "description":
           session.data.description = txt;
           session.step = "cover";
-          return ctx.reply(
-            "Blog uchun cover rasm yuboring (photo) yoki 'skip' deb yozib o'tkazib yuboring:"
+          
+          return sendAndSaveMessage(
+            ctx,
+            "Blog uchun cover rasm yuboring (photo) yoki 'skip' tugmasini bosing:",
+            Markup.inlineKeyboard([
+              [Markup.button.callback("🖼 Rasm yuborish", "BLOG_COVER_UPLOAD")],
+              [Markup.button.callback("➡️ O'tkazish", "BLOG_COVER_SKIP")],
+              [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+            ])
           );
+          
         case "await_block_text": {
           const type = session.data.pendingBlockType || "p";
           session.data.blocks = session.data.blocks || [];
           session.data.blocks.push({ type, text: txt });
           session.step = "builder";
           session.data.pendingBlockType = null;
-          return ctx.reply("Blok qo'shildi.", builderKeyboard());
+          
+          return sendAndSaveMessage(ctx, "Blok qo'shildi.", builderKeyboard());
         }
+        
         case "await_block_ul": {
           if (txt.toLowerCase() === "done") {
             session.step = "builder";
-            return ctx.reply("Ro'yxat qo'shildi.", builderKeyboard());
+            return sendAndSaveMessage(ctx, "Ro'yxat qo'shildi.", builderKeyboard());
           }
+          
           const items = txt
             .split(/\n+/)
             .map((s) => s.trim())
             .filter(Boolean);
-          if (!items.length)
-            return ctx.reply("Hech bo'lmasa bitta element kiriting yoki 'done' yozing.");
+          
+          if (!items.length) {
+            return sendAndSaveMessage(
+              ctx,
+              "Hech bo'lmasa bitta element kiriting yoki 'done' yozing.",
+              cancelButton()
+            );
+          }
+          
           session.data.blocks = session.data.blocks || [];
           session.data.blocks.push({ type: "ul", items });
           session.step = "builder";
-          return ctx.reply("Ro'yxat qo'shildi.", builderKeyboard());
+          
+          return sendAndSaveMessage(ctx, "Ro'yxat qo'shildi.", builderKeyboard());
         }
+        
         case "await_block_image_caption": {
           // optional caption for the last added image
           const blocks = session.data.blocks || [];
           const last = blocks[blocks.length - 1];
-          if (txt.toLowerCase() !== "skip" && last && last.type === "img" && !last.caption) {
+          
+          if (last && last.type === "img" && !last.caption) {
             last.caption = txt;
             session.data.blocks = blocks;
             session.step = "builder";
-            return ctx.reply("Rasm sarlavhasi qo'shildi.", builderKeyboard());
+            
+            return sendAndSaveMessage(ctx, "Rasm sarlavhasi qo'shildi.", builderKeyboard());
           }
+          
           session.step = "builder";
-          return ctx.reply("Rasm sarlavhasi o'tkazildi.", builderKeyboard());
+          return sendAndSaveMessage(ctx, "Rasm sarlavhasi o'tkazildi.", builderKeyboard());
         }
+        
         case "builder":
           // Any stray text while in builder mode -> treat as paragraph
           session.data.blocks = session.data.blocks || [];
           session.data.blocks.push({ type: "p", text: txt });
-          return ctx.reply("Matn parcha sifatida qo'shildi.", builderKeyboard());
-        case "cover":
-          if (txt.toLowerCase() === "skip") {
-            session.step = "builder";
-            return ctx.reply("Cover o'tkazildi. Endi kontent bloklarini qo'shing:", builderKeyboard());
-          }
-          return ctx.reply("Iltimos cover uchran PHOTO yuboring yoki 'skip' deb yozing.");
-        default:
-          break;
+          
+          return sendAndSaveMessage(ctx, "Matn parcha sifatida qo'shildi.", builderKeyboard());
       }
     }
 
@@ -847,41 +1490,124 @@ bot.on("text", async (ctx) => {
       switch (session.step) {
         case "usd": {
           const n = parseNumber(txt);
-          if (n == null || n <= 0) return ctx.reply("To'g'ri USD qiymatini kiriting.");
+          if (n == null || n <= 0) {
+            return sendAndSaveMessage(ctx, "To'g'ri USD qiymatini kiriting.", cancelButton());
+          }
+          
           session.data.usd = n;
           session.step = null;
-          return ctx.reply(
-            "USD qabul qilindi. Yana EUR/GOLD kiritishingiz mumkin yoki '✅ Saqlash' tugmasini bosing."
+          
+          return sendAndSaveMessage(
+            ctx,
+            "USD qabul qilindi. Yana EUR/GOLD kiritishingiz mumkin yoki '✅ Saqlash' tugmasini bosing.",
+            Markup.inlineKeyboard([
+              [Markup.button.callback("✏️ EUR ni kiritish", "ADMIN_RATES_SET_EUR")],
+              [Markup.button.callback("✏️ OLTIN (1g) kiritish", "ADMIN_RATES_SET_GOLD")],
+              [Markup.button.callback("✅ Saqlash", "ADMIN_RATES_SAVE")],
+              [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+            ])
           );
         }
+        
         case "eur": {
           const n = parseNumber(txt);
-          if (n == null || n <= 0) return ctx.reply("To'g'ri EUR qiymatini kiriting.");
+          if (n == null || n <= 0) {
+            return sendAndSaveMessage(ctx, "To'g'ri EUR qiymatini kiriting.", cancelButton());
+          }
+          
           session.data.eur = n;
           session.step = null;
-          return ctx.reply(
-            "EUR qabul qilindi. Yana USD/GOLD kiritishingiz mumkin yoki '✅ Saqlash' tugmasini bosing."
+          
+          return sendAndSaveMessage(
+            ctx,
+            "EUR qabul qilindi. Yana USD/GOLD kiritishingiz mumkin yoki '✅ Saqlash' tugmasini bosing.",
+            Markup.inlineKeyboard([
+              [Markup.button.callback("✏️ USD ni kiritish", "ADMIN_RATES_SET_USD")],
+              [Markup.button.callback("✏️ OLTIN (1g) kiritish", "ADMIN_RATES_SET_GOLD")],
+              [Markup.button.callback("✅ Saqlash", "ADMIN_RATES_SAVE")],
+              [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+            ])
           );
         }
+        
         case "gold": {
           const n = parseNumber(txt);
-          if (n == null || n <= 0) return ctx.reply("To'g'ri OLTIN (1g) qiymatini kiriting.");
+          if (n == null || n <= 0) {
+            return sendAndSaveMessage(ctx, "To'g'ri OLTIN (1g) qiymatini kiriting.", cancelButton());
+          }
+          
           session.data.gold = n;
           session.step = null;
-          return ctx.reply("OLTIN qabul qilindi. Endi '✅ Saqlash' tugmasini bosing.");
-        }
-        default:
-          return ctx.reply(
-            "Kurslarni yangilash menyusidan tugmani tanlang (USD/EUR/OLTIN) yoki '✅ Saqlash' ni bosing."
+          
+          return sendAndSaveMessage(
+            ctx,
+            "OLTIN qabul qilindi. Endi '✅ Saqlash' tugmasini bosing.",
+            Markup.inlineKeyboard([
+              [Markup.button.callback("✅ Saqlash", "ADMIN_RATES_SAVE")],
+              [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+            ])
           );
+        }
       }
     }
 
-    // No active session
-    return ctx.reply("Iltimos menyudan tanlang yoki /start ni bosing.", mainMenu(isAdmin(id)));
+    // ---------- CATEGORY SELECTION (PRODUCT) ----------
+    if (session.type === "admin_product" && session.step === "category" && txt.startsWith("PROD_CAT_")) {
+      const categoryId = txt.replace("PROD_CAT_", "");
+      const categories = await fetchData("categories");
+      const categoryName = categories[categoryId];
+      
+      if (categoryName) {
+        session.data.category = categoryName;
+        session.step = "description";
+        return sendAndSaveMessage(ctx, "Mahsulot tavsifini kiriting:", cancelButton());
+      }
+    }
+
+    // ---------- CATEGORY SELECTION (BLOG) ----------
+    if (session.type === "admin_blog" && session.step === "category" && txt.startsWith("BLOG_CAT_")) {
+      const categoryId = txt.replace("BLOG_CAT_", "");
+      const categories = await fetchData("categories");
+      const categoryName = categories[categoryId];
+      
+      if (categoryName) {
+        session.data.category = categoryName;
+        session.step = "read_time";
+        return sendAndSaveMessage(ctx, "O'qish vaqti (minutlarda):", cancelButton());
+      }
+    }
+
+    // ---------- CATEGORY SELECTION (ADMIN) ----------
+    if (txt.startsWith("ADMIN_CAT_")) {
+      if (!isAdmin(id)) return sendAndSaveMessage(ctx, "Siz admin emassiz.", backButton());
+      
+      const categoryId = txt.replace("ADMIN_CAT_", "");
+      const categories = await fetchData("categories");
+      const categoryName = categories[categoryId];
+      
+      if (!categoryName) return sendAndSaveMessage(ctx, "Kategoriya topilmadi.", backButton());
+      
+      session.type = "admin_category_action";
+      session.step = "action";
+      session.data.categoryId = categoryId;
+      session.data.categoryName = categoryName;
+      
+      return sendAndSaveMessage(
+        ctx,
+        `Kategoriya: ${categoryName}\n\nNima qilmoqchisiz?`,
+        Markup.inlineKeyboard([
+          [Markup.button.callback("✏️ Nomini o'zgartirish", `EDIT_CAT_${categoryId}`)],
+          [Markup.button.callback("🗑 O'chirish", `DELETE_CAT_${categoryId}`)],
+          [Markup.button.callback("🔙 Orqaga", "ADMIN_CATEGORIES")]
+        ])
+      );
+    }
+
+    // No active session or unrecognized text
+    return sendAndSaveMessage(ctx, "Iltimos menyudan tanlang yoki /start ni bosing.", mainMenu(isAdmin(id)));
   } catch (err) {
     console.error("text handler xatosi:", err);
-    ctx.reply("Xatolik yuz berdi. Iltimos qayta urinib ko'ring.");
+    sendAndSaveMessage(ctx, "Xatolik yuz berdi. Iltimos qayta urinib ko'ring.", backButton());
   }
 });
 
@@ -891,24 +1617,25 @@ bot.on("photo", async (ctx) => {
   const session = getSession(id);
   if (!session.type) return; // no session
 
-  if (!ctx.message.photo?.length) return ctx.reply("Iltimos, rasm yuboring.");
+  if (!ctx.message.photo?.length) return sendAndSaveMessage(ctx, "Iltimos, rasm yuboring.", cancelButton());
   const fileId = ctx.message.photo.at(-1).file_id;
 
   try {
     // --- If admin uploading product photo ---
     if (session.type === "admin_product" && session.step === "photo") {
       const url = await uploadToImgBB(fileId, ctx.telegram);
-      if (!url) return ctx.reply("Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring.");
+      if (!url) return sendAndSaveMessage(ctx, "Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring.", cancelButton());
 
       await pushData("products", {
         name: session.data.name,
         price: session.data.price,
+        category: session.data.category || "",
         description: session.data.description,
         photo: url, // ALWAYS store URL
         createdAt: Date.now(),
       });
 
-      ctx.reply(`✅ Mahsulot qo'shildi: ${session.data.name}`, mainMenu(true));
+      sendAndSaveMessage(ctx, `✅ Mahsulot qo'shildi: ${session.data.name}`, mainMenu(true));
       resetSession(id);
       return;
     }
@@ -916,21 +1643,34 @@ bot.on("photo", async (ctx) => {
     // --- ADMIN BLOG: cover upload ---
     if (session.type === "admin_blog" && session.step === "cover") {
       const url = await uploadToImgBB(fileId, ctx.telegram);
-      if (!url) return ctx.reply("Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring.");
+      if (!url) return sendAndSaveMessage(ctx, "Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring.", cancelButton());
+      
       session.data.cover = url; // ALWAYS URL
       session.step = "builder";
-      return ctx.reply("Cover saqlandi. Endi kontent bloklarini qo'shing:", builderKeyboard());
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Cover saqlandi. Endi kontent bloklarini qo'shing:",
+        builderKeyboard()
+      );
     }
 
     // --- ADMIN BLOG: image block upload ---
     if (session.type === "admin_blog" && session.step === "await_block_image") {
       const url = await uploadToImgBB(fileId, ctx.telegram);
-      if (!url) return ctx.reply("Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring.");
+      if (!url) return sendAndSaveMessage(ctx, "Rasmni yuklashda xatolik yuz berdi. Qayta urinib ko'ring.", cancelButton());
+      
       session.data.blocks = session.data.blocks || [];
       session.data.blocks.push({ type: "img", url }); // ALWAYS URL
       session.step = "await_block_image_caption";
-      return ctx.reply(
-        "Rasm uchun sarlavha/izoh kiriting (ixtiyoriy). Agar xohlamasangiz 'skip' deb yozing."
+      
+      return sendAndSaveMessage(
+        ctx,
+        "Rasm uchun sarlavha/izoh kiriting (ixtiyoriy). Agar xohlamasangiz 'skip' tugmasini bosing:",
+        Markup.inlineKeyboard([
+          [Markup.button.callback("➡️ O'tkazish", "BLOG_IMG_SKIP")],
+          [Markup.button.callback("🔙 Orqaga", "MENU_BACK")]
+        ])
       );
     }
 
@@ -940,7 +1680,7 @@ bot.on("photo", async (ctx) => {
       (session.step === "await_receipt" || session.step === "awaiting_confirm_receipt")
     ) {
       const receiptUrl = await uploadToImgBB(fileId, ctx.telegram);
-      if (!receiptUrl) return ctx.reply("Chekni yuklashda xatolik yuz berdi. Iltimos qayta urinib ko'ring.");
+      if (!receiptUrl) return sendAndSaveMessage(ctx, "Chekni yuklashda xatolik yuz berdi. Iltimos qayta urinib ko'ring.", cancelButton());
 
       const orderData = {
         productId: session.data.productId || null,
@@ -964,9 +1704,7 @@ bot.on("photo", async (ctx) => {
 
       await pushData("orders", orderData);
 
-      const caption = `✅ Yangi buyurtma\n\nMahsulot: ${orderData.productName}\nSoni: ${orderData.quantity}\nNarx (bir dona): ${formatUZS(
-        orderData.price_each
-      )}\nUmumiy: ${formatUZS(orderData.total)}\nIsm: ${orderData.name}\nTelefon: ${orderData.phone}\nManzil: ${orderData.address}\nTelegram: ${orderData.telegram || "—"}`;
+      const caption = `✅ Yangi buyurtma\n\nMahsulot: ${orderData.productName}\nSoni: ${orderData.quantity}\nNarx (bir dona): ${formatUZS(orderData.price_each)}\nUmumiy: ${formatUZS(orderData.total)}\nIsm: ${orderData.name}\nTelefon: ${orderData.phone}\nManzil: ${orderData.address}\nTelegram: ${orderData.telegram || "—"}`;
 
       try {
         if (channelAvailable) {
@@ -987,20 +1725,22 @@ bot.on("photo", async (ctx) => {
       try {
         await ctx.replyWithPhoto(receiptUrl, { caption, parse_mode: "HTML" });
       } catch (e) {
-        await ctx.reply(caption);
-        if (receiptUrl) await ctx.reply(`Chek: ${receiptUrl}`);
+        await sendAndSaveMessage(ctx, caption);
+        if (receiptUrl) await sendAndSaveMessage(ctx, `Chek: ${receiptUrl}`);
       }
 
       resetSession(id);
       return;
     }
 
-    return ctx.reply(
-      "Hozir rasm qabul qilinmaydi. Agar siz blog tuzayotgan bo'lsangiz, mos tugmani bosing yoki buyurtma bo'lsa chek yuborish bosqichiga kiring."
+    return sendAndSaveMessage(
+      ctx,
+      "Hozir rasm qabul qilinmaydi. Agar siz blog tuzayotgan bo'lsangiz, mos tugmani bosing yoki buyurtma bo'lsa chek yuborish bosqichiga kiring.",
+      backButton()
     );
   } catch (err) {
     console.error("photo handler xatosi:", err);
-    ctx.reply("Rasmni qayta yuklashda xato yuz berdi. Iltimos qayta urinib ko'ring.");
+    sendAndSaveMessage(ctx, "Rasmni qayta yuklashda xato yuz berdi. Iltimos qayta urinib ko'ring.", backButton());
   }
 });
 

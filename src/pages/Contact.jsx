@@ -1,42 +1,56 @@
 import React, { useState } from 'react';
 import { BsInstagram, BsTelegram } from 'react-icons/bs';
-import { FaFacebook, FaGithub, FaTwitter, FaYoutube } from 'react-icons/fa';
+import { FaYoutube } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
 const Contact = () => {
-    const [formData, setformData] = useState({ name: "", contact: "", message: "" });
-    const [openPanel, setOpenPanel] = useState(false);
-    const [openWarning, setOpenWarning] = useState(false);
-    const chatId = "6276000412"; // Telegram chat ID
-    const telegramBotId = "7838971341:AAE6kW-r2amzCGS4Mukh43InQoSa77y3z0I"; // Telegram bot token
-    const url = `https://api.telegram.org/bot${telegramBotId}/sendMessage`;
+  const [formData, setformData] = useState({ name: "", contact: "", message: "" });
+  const [openPanel, setOpenPanel] = useState(false);
+  const [openWarning, setOpenWarning] = useState(false);
+
+  // .env dan token va idlarni olish
+  const telegramBotId = import.meta.env.BOT_TOKEN;
+  const adminIds = import.meta.env.ADMIN_IDS
+    ? JSON.parse(import.meta.env.ADMIN_IDS) // ["123","456"]
+    : [];
   
-    const handleChange = (e) => {
-      setformData({ ...formData, [e.target.name]: e.target.value });
-    };
-    
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-  
-      const message = `👤 Name: ${formData.name}\n📞 Contact: ${formData.contact}\n💬 Message: ${formData.message}`;
-  
-      try {
-        await axios.post(url, { chat_id: chatId, text: message });
-        setOpenPanel(true);
-        setformData({ name: "", contact: "", message: "" });
-        setTimeout(() => setOpenPanel(false), 3000);
-      } catch (error) {
-        setOpenWarning(true);
-        setTimeout(() => setOpenWarning(false), 3000);
-      }
-    };
-  
+  const url = `https://api.telegram.org/bot${telegramBotId}/sendMessage`;
+
+  const handleChange = (e) => {
+    setformData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const message = `👤 Name: ${formData.name}\n📞 Contact: ${formData.contact}\n💬 Message: ${formData.message}`;
+
+    try {
+      // Barcha adminlarga xabar yuborish
+      await Promise.all(
+        adminIds.map((id) =>
+          axios.post(url, {
+            chat_id: id,
+            text: message,
+          })
+        )
+      );
+
+      setOpenPanel(true);
+      setformData({ name: "", contact: "", message: "" });
+      setTimeout(() => setOpenPanel(false), 3000);
+    } catch (error) {
+      setOpenWarning(true);
+      setTimeout(() => setOpenWarning(false), 3000);
+    }
+  };
+
   return (
     <section id="contact" className="py-16 text-gray-800 dark:text-gray-200 font-main transition-colors duration-300">
       <div className="w-full max-w-[1420px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-2xl p-10 shadow-lg dark:shadow-gray-900/50">
 
-        {/* Chap blok: Tarmoqlar va matn */}
+        {/* Chap blok */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -106,7 +120,7 @@ const Contact = () => {
               <h3 className="text-center text-lg font-semibold text-mainRed dark:text-mainRedLight">Telegram</h3>
             </motion.a>
 
-            {/* Facebook */}
+            {/* Youtube */}
             <motion.a 
               href="http://www.youtube.com/@moliauz" 
               target="_blank" 
@@ -125,7 +139,7 @@ const Contact = () => {
           </div>
         </motion.div>
 
-        {/* O'ng blok: Forma */}
+        {/* Forma */}
         <motion.div 
           className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-8 border border-gray-300 dark:border-gray-600 shadow transition-colors duration-300"
           initial={{ opacity: 0, x: 50 }}
@@ -218,7 +232,7 @@ const Contact = () => {
             </motion.div>
           </form>
 
-          {/* Xabar yuborildi bildirishnomasi */}
+          {/* Xabar yuborildi */}
           <AnimatePresence>
             {openPanel && (
               <motion.div
@@ -232,7 +246,7 @@ const Contact = () => {
             )}
           </AnimatePresence>
 
-          {/* Xatolik bildirishnomasi */}
+          {/* Xatolik */}
           <AnimatePresence>
             {openWarning && (
               <motion.div

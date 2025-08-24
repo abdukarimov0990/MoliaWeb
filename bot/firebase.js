@@ -1,6 +1,6 @@
 // firebase.js
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, get, push, set } from "firebase/database";
+import { getDatabase, ref, get, push, set, update, remove } from "firebase/database";
 
 // --- Firebase konfiguratsiyasi ---
 const firebaseConfig = {
@@ -21,22 +21,27 @@ export const db = getDatabase(app);
 // --- Umumiy funksiyalar ---
 
 // Ma'lumot olish
-export const fetchFromDB = async (path) => {
+export const fetchFromDB = async (path, returnAsArray = true) => {
     try {
         const dataRef = ref(db, path);
         const snapshot = await get(dataRef);
         if (snapshot.exists()) {
             const data = snapshot.val();
-            // Object bo'lsa arrayga aylantirish
-            return typeof data === 'object'
-                ? Object.keys(data).map(key => ({ id: key, ...data[key] }))
-                : data;
+            if (returnAsArray) {
+                // Object bo'lsa arrayga aylantirish
+                return typeof data === 'object' && data !== null
+                    ? Object.keys(data).map(key => ({ id: key, ...data[key] }))
+                    : data;
+            } else {
+                // Object sifatida qaytarish
+                return data;
+            }
         } else {
-            return [];
+            return returnAsArray ? [] : {};
         }
     } catch (err) {
         console.error(`Firebase fetch error [${path}]:`, err);
-        return [];
+        return returnAsArray ? [] : {};
     }
 };
 
@@ -45,20 +50,104 @@ export const pushToDB = async (path, data) => {
     try {
         const newRef = push(ref(db, path));
         await set(newRef, data);
-        return true;
+        return { success: true, id: newRef.key };
     } catch (err) {
         console.error(`Firebase push error [${path}]:`, err);
-        return false;
+        return { success: false, error: err.message };
+    }
+};
+
+// Ma'lumot yangilash
+export const updateInDB = async (path, data) => {
+    try {
+        await update(ref(db, path), data);
+        return { success: true };
+    } catch (err) {
+        console.error(`Firebase update error [${path}]:`, err);
+        return { success: false, error: err.message };
+    }
+};
+
+// Ma'lumot o'chirish
+export const deleteFromDB = async (path) => {
+    try {
+        await remove(ref(db, path));
+        return { success: true };
+    } catch (err) {
+        console.error(`Firebase delete error [${path}]:`, err);
+        return { success: false, error: err.message };
     }
 };
 
 // --- Alohida fetch funksiyalari ---
-export const fetchBlogs = async () => fetchFromDB('blogs');
-export const fetchOrders = async () => fetchFromDB('orders');
-export const fetchProducts = async () => fetchFromDB('products');
-export const fetchFeedbacks = async () => fetchFromDB('feedback'); // Feedbacklar
 
-// --- Rates fetch funksiyasi ---
+// Bloglar
+export const fetchBlogs = async () => fetchFromDB('blogs');
+
+// Buyurtmalar
+export const fetchOrders = async () => fetchFromDB('orders');
+
+// Mahsulotlar
+export const fetchProducts = async () => fetchFromDB('products');
+
+// Feedbacklar
+export const fetchFeedbacks = async () => fetchFromDB('feedback');
+
+// Kategoriyalar - false parametri bilan obyekt sifatida olish
+export const fetchCategories = async () => fetchFromDB('categories', false);
+
+// Sozlamalar (rates)
+export const fetchSettings = async () => {
+    try {
+        const dataRef = ref(db, 'settings');
+        const snapshot = await get(dataRef);
+        return snapshot.exists() ? snapshot.val() : {};
+    } catch (err) {
+        console.error('Firebase fetchSettings error:', err);
+        return {};
+    }
+};
+
+// --- Kategoriyalar bilan ishlash ---
+
+// Yangi kategoriya qo'shish
+export const addCategory = async (categoryData) => {
+    return await pushToDB('categories', {
+        ...categoryData,
+        createdAt: Date.now()
+    });
+};
+
+// Kategoriyani yangilash
+export const updateCategory = async (categoryId, updates) => {
+    return await updateInDB(`categories/${categoryId}`, {
+        ...updates,
+        updatedAt: Date.now()
+    });
+};
+
+// Kategoriyani o'chirish
+export const deleteCategory = async (categoryId) => {
+    return await deleteFromDB(`categories/${categoryId}`);
+};
+
+// ID bo'yicha kategoriya o'qish
+export const fetchCategoryById = async (categoryId) => {
+    try {
+        const dataRef = ref(db, `categories/${categoryId}`);
+        const snapshot = await get(dataRef);
+        if (snapshot.exists()) {
+            return { id: categoryId, ...snapshot.val() };
+        } else {
+            return null;
+        }
+    } catch (err) {
+        console.error(`Firebase fetchCategoryById error [${categoryId}]:`, err);
+        return null;
+    }
+};
+
+// --- Rates funksiyalari ---
 export const fetchRates = async () => {
     try {
         const dataRef = ref(db, 'settings/rates');
@@ -72,4 +161,68 @@ export const fetchRates = async () => {
         console.error('Firebase fetchRates error:', err);
         return { usd: null, eur: null, gold: null, updatedAt: null };
     }
+};
+
+// Rates yangilash
+export const updateRates = async (ratesData) => {
+    return await updateInDB('settings/rates', {
+        ...ratesData,
+        updatedAt: Date.now()
+    });
+};
+
+// --- Mahsulotlar bilan ishlash ---
+export const addProduct = async (productData) => {
+    return await pushToDB('products', {
+        ...productData,
+        createdAt: Date.now()
+    });
+};
+
+export const updateProduct = async (productId, updates) => {
+    return await updateInDB(`products/${productId}`, {
+        ...updates,
+        updatedAt: Date.now()
+    });
+};
+
+export const deleteProduct = async (productId) => {
+    return await deleteFromDB(`products/${productId}`);
+};
+
+// --- Bloglar bilan ishlash ---
+export const addBlog = async (blogData) => {
+    return await pushToDB('blogs', {
+        ...blogData,
+        createdAt: Date.now()
+    });
+};
+
+export const updateBlog = async (blogId, updates) => {
+    return await updateInDB(`blogs/${blogId}`, {
+        ...updates,
+        updatedAt: Date.now()
+    });
+};
+
+export const deleteBlog = async (blogId) => {
+    return await deleteFromDB(`blogs/${blogId}`);
+};
+
+// --- Feedbacklar bilan ishlash ---
+export const addFeedback = async (feedbackData) => {
+    return await pushToDB('feedback', {
+        ...feedbackData,
+        createdAt: Date.now()
+    });
+};
+
+// --- Export qilingan barcha funksiyalar ---
+export {
+    ref,
+    get,
+    push,
+    set,
+    update,
+    remove
 };
